@@ -25,12 +25,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-        "port": 5173
-
+      "port": 5173
     },
     "extra": {
       "eas": {
-        "projectId": "468e41f4-b38e-421d-8e95-8174cf98ae95"
+        "projectId": "3291588d-ba22-4cb1-b278-b36afe0e137a"
       }
     }
   }

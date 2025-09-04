@@ -111,6 +111,15 @@ export default function OrderScreen() {
     }
   };
 
+    const handleLogout = async () => {
+      try {
+        await AuthAPI.logout();
+        navigation.replace("Login");
+      } catch (error) {
+        Alert.alert("Error", "Failed to logout. Please try again.");
+      }
+    };
+
   useEffect(() => {
     fetchOrders();
   }, [activeTab]);
@@ -585,6 +594,28 @@ const printBill = async (orderId) => {
           </Text>
         </View>
       )}
+  <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.footerButton}
+          onPress={() => navigation.navigate("Orders")}
+        >
+          <Ionicons name="list" size={24} color="#7e4bcc" />
+          <Text style={styles.footerButtonText}>Orders</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.footerButton}
+          onPress={() => navigation.navigate("Menu")}
+        >
+          <Ionicons name="fast-food" size={24} color="#7e4bcc" />
+          <Text style={styles.footerButtonText}>Menu</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.footerButton} onPress={handleLogout}>
+          <Ionicons name="log-out" size={24} color="#7e4bcc" />
+          <Text style={styles.footerButtonText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Print Preview Modal */}
       <Modal
@@ -1228,5 +1259,35 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     fontFamily: 'Poppins-Bold',
+  },
+    footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#e0d7f0",
+    paddingVertical: 12,
+    paddingBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 100,
+  },
+  footerButton: {
+    alignItems: "center",
+    flex: 1,
+  },
+  footerButtonText: {
+    marginTop: 6,
+    fontSize: 12,
+    fontFamily: "Poppins-Medium",
+    color: "#7e4bcc",
   },
 });

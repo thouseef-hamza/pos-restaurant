@@ -8,6 +8,7 @@ import LoginScreen from './screens/LoginScreen';
 import MenuScreen from './screens/MenuScreen';
 import OrderScreen from './screens/OrderScreen';
 import DeliveryBoyScreen from './screens/DeliveryBoyScreen';
+import { DeliveryDashboardScreen,OrdersScreen } from './screens/DeliveryBoyScreen';
 import { AuthAPI } from './api/api';
 
 const Stack = createNativeStackNavigator();
@@ -49,7 +50,7 @@ export default function App() {
             setInitialScreen('Menu');
             break;
           case 'delivery':
-            setInitialScreen('Delivery');
+            setInitialScreen('DeliveryDashboard');
             break;
           default:
             console.warn(`Unsupported role: ${user.role}. Redirecting to login.`);
@@ -95,7 +96,17 @@ export default function App() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Menu" component={MenuScreen} />
         <Stack.Screen name="Orders" component={OrderScreen} />
-        <Stack.Screen name="Delivery" component={DeliveryBoyScreen} />
+         <Stack.Screen 
+        name="DeliveryDashboard" 
+        component={DeliveryDashboardScreen} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="OrdersScreen" 
+        component={OrdersScreen} 
+        options={{ headerShown: false }}
+      />
+        {/* <Stack.Screen name="Delivery" component={DeliveryBoyScreen} /> */}
       </Stack.Navigator>
     </NavigationContainer>
   );

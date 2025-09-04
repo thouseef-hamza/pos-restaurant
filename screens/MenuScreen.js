@@ -37,8 +37,10 @@ export default function MenuScreen() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);
-  const [numberOfGuests, setNumberOfGuests] = useState("1");
+  const [numberOfGuests, setNumberOfGuests] = useState("0");
   const [selectedDeliveryBoy, setSelectedDeliveryBoy] = useState(null);
+  const [selectedWaiter, setSelectedWaiter] = useState(null);
+
   const [selectedCounter, setSelectedCounter] = useState(null);
   const [selectedPlatform, setSelectedPlatform] = useState(null);
 
@@ -46,6 +48,8 @@ export default function MenuScreen() {
   const [showAddressPicker, setShowAddressPicker] = useState(false);
   const [showTablePicker, setShowTablePicker] = useState(false);
   const [showDeliveryBoyPicker, setShowDeliveryBoyPicker] = useState(false);
+  const [showWaiterPicker, setShowWaiterPicker] = useState(false);
+
   const [showCounterPicker, setShowCounterPicker] = useState(false);
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
 
@@ -57,6 +61,8 @@ export default function MenuScreen() {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [waiters, setWaiters] = useState([]);
+
   const [tables, setTables] = useState([]);
   const [deliveryBoys, setDeliveryBoys] = useState([]);
   const [counters, setCounters] = useState([]);
@@ -74,7 +80,21 @@ export default function MenuScreen() {
   const [printActionType, setPrintActionType] = useState("");
 
   const [filterItems, setFilterItems] = useState("All");
-
+  const [customerSearchText, setCustomerSearchText] = useState("");
+  const searchedCustomers = customers.filter(
+    (customer) =>
+      customer.full_name
+        .toLowerCase()
+        .includes(customerSearchText.toLowerCase()) ||
+      (customer.phone_number &&
+        customer.phone_number.includes(customerSearchText)) ||
+      (customer.email &&
+        customer.email.toLowerCase().includes(customerSearchText.toLowerCase()))
+  );
+  const [waiterSearchText, setWaiterSearchText] = useState("");
+  const searchedWaiters = waiters.filter((waiter) =>
+    waiter.name.toLowerCase().includes(customerSearchText.toLowerCase())
+  );
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -92,6 +112,7 @@ export default function MenuScreen() {
           customersResponse,
           tablesResponse,
           deliveryBoysResponse,
+          waitersResponse,
           countersResponse,
           platformsResponse,
         ] = await Promise.all([
@@ -100,6 +121,8 @@ export default function MenuScreen() {
           UserAPI.getCustomers(),
           OrderAPI.getTables(),
           UserAPI.getStaff("delivery"),
+          UserAPI.getStaff("waiter"),
+
           OrderAPI.getCounters(),
           OrderAPI.getPlatforms(),
         ]);
@@ -109,6 +132,7 @@ export default function MenuScreen() {
         setCustomers(customersResponse);
         setTables(tablesResponse);
         setDeliveryBoys(deliveryBoysResponse);
+        setWaiters(waitersResponse);
         setCounters(countersResponse);
         setPlatforms(platformsResponse);
       } catch (err) {
@@ -248,41 +272,41 @@ export default function MenuScreen() {
         return;
       }
 
-      if (!selectedCustomer) {
-        Alert.alert("Error", "Please select a customer");
-        return;
-      }
+      // if (!selectedCustomer) {
+      //   Alert.alert("Error", "Please select a customer");
+      //   return;
+      // }
 
-      switch (selectedOrderType) {
-        case "Dine in":
-          if (!selectedTable) {
-            Alert.alert("Error", "Please select a table");
-            return;
-          }
-          if (!numberOfGuests || parseInt(numberOfGuests) <= 0) {
-            Alert.alert("Error", "Please enter valid number of guests");
-            return;
-          }
-          break;
-        case "Delivery":
-          if (!selectedAddress || !selectedDeliveryBoy) {
-            Alert.alert("Error", "Please complete delivery details");
-            return;
-          }
-          break;
-        case "Takeaway":
-          if (!selectedCounter) {
-            Alert.alert("Error", "Please select a counter");
-            return;
-          }
-          break;
-        case "Online Order":
-          if (!selectedAddress || !selectedPlatform) {
-            Alert.alert("Error", "Please complete online order details");
-            return;
-          }
-          break;
-      }
+      // switch (selectedOrderType) {
+      //   case "Dine in":
+      //     if (!selectedTable) {
+      //       Alert.alert("Error", "Please select a table");
+      //       return;
+      //     }
+      //     if (!numberOfGuests || parseInt(numberOfGuests) <= 0) {
+      //       Alert.alert("Error", "Please enter valid number of guests");
+      //       return;
+      //     }
+      //     break;
+      //   case "Delivery":
+      //     if (!selectedAddress || !selectedDeliveryBoy) {
+      //       Alert.alert("Error", "Please complete delivery details");
+      //       return;
+      //     }
+      //     break;
+      //   case "Takeaway":
+      //     if (!selectedCounter) {
+      //       Alert.alert("Error", "Please select a counter");
+      //       return;
+      //     }
+      //     break;
+      //   case "Online Order":
+      //     if (!selectedAddress || !selectedPlatform) {
+      //       Alert.alert("Error", "Please complete online order details");
+      //       return;
+      //     }
+      //     break;
+      // }
 
       const orderData = {
         order_type: selectedOrderType?.toLocaleLowerCase().replace(" ", "_"),
@@ -366,13 +390,6 @@ export default function MenuScreen() {
 
   const renderMenuItem = ({ item }) => (
     <View style={styles.gridItem}>
-      {/* <View style={styles.itemImagePlaceholder}>
-        {item.image ? (
-          <Image source={{ uri: item.image }} style={styles.itemImage} />
-        ) : (
-          <Ionicons name="fast-food" size={40} color="#7e4bcc" />
-        )}
-      </View> */}
       <Text style={styles.itemName} numberOfLines={1}>
         {item.name}
       </Text>
@@ -442,6 +459,17 @@ export default function MenuScreen() {
   }
   return (
     <SafeAreaView style={styles.container}>
+       <View style={styles.brandingSection}>
+              <View style={styles.brandingContainer}>
+                <Image
+                  source={require("../assets/nasscript_logo.png")}
+                  style={styles.brandLogo}
+                  resizeMode="contain"
+                />
+                <Text style={styles.brandText}>NasResto</Text>
+              </View>
+              <View style={styles.brandingDivider} />
+            </View>
       {/* Main Content */}
       <View style={styles.content}>
         {/* Header */}
@@ -480,7 +508,7 @@ export default function MenuScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoriesContainer}
         >
-         {categories.map((category) => (
+          {categories.map((category) => (
             <TouchableOpacity
               key={category.id}
               onPress={() => handleCategorySelect(category.name)}
@@ -549,7 +577,7 @@ export default function MenuScreen() {
             //   style={styles.orderFormContainer}
             //   keyboardVerticalOffset={80}
             // >
-              <>
+            <>
               <ScrollView
                 contentContainerStyle={styles.orderFormContainer}
                 keyboardShouldPersistTaps="handled"
@@ -607,11 +635,40 @@ export default function MenuScreen() {
                       keyboardType="numeric"
                       value={numberOfGuests}
                       onChangeText={setNumberOfGuests}
-                      placeholder="1"
+                      placeholder="0"
                     />
                   </View>
                 )}
 
+                {selectedOrderType === "Dine in" && (
+                  <View style={styles.sectionBox}>
+                    <Text style={styles.subSectionTitle}>Select Waiter</Text>
+                    <TouchableOpacity
+                      style={styles.pickerButton}
+                      onPress={() => setShowWaiterPicker(true)}
+                    >
+                      <Text
+                        style={
+                          selectedWaiter
+                            ? styles.pickerText
+                            : styles.pickerPlaceholder
+                        }
+                      >
+                        {selectedWaiter?.name || "Select a waiter..."}
+                      </Text>
+                      <Ionicons name="chevron-down" size={20} color="#888" />
+                    </TouchableOpacity>
+
+                    {/* <Text style={styles.subSectionTitle}>Delivery Fee</Text>
+                    <TextInput
+                      style={styles.feeInput}
+                      keyboardType="numeric"
+                      value={deliveryFee}
+                      onChangeText={setDeliveryFee}
+                      placeholder="0.00"
+                    /> */}
+                  </View>
+                )}
                 {selectedOrderType === "Delivery" && (
                   <View style={styles.sectionBox}>
                     <Text style={styles.subSectionTitle}>
@@ -738,32 +795,30 @@ export default function MenuScreen() {
                     </>
                   )}
                 </View>
-
-                
               </ScrollView>
               <View style={styles.totalSection}>
-                  <Text style={styles.totalLabel}>Total Payment</Text>
-                  <Text style={styles.totalAmount}>
-                    QAR {totalAmount.toFixed(2)}
-                  </Text>
+                <Text style={styles.totalLabel}>Total Payment</Text>
+                <Text style={styles.totalAmount}>
+                  QAR {totalAmount.toFixed(2)}
+                </Text>
 
-                  <View style={styles.actionButtons}>
-                    <TouchableOpacity
-                      style={styles.kotButton}
-                      onPress={() => handlePlaceOrder("kot")}
-                    >
-                      <Text style={styles.kotButtonText}>KOT & Bill</Text>
-                    </TouchableOpacity>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity
+                    style={styles.kotButton}
+                    onPress={() => handlePlaceOrder("kot")}
+                  >
+                    <Text style={styles.kotButtonText}>KOT & Bill</Text>
+                  </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={styles.billButton}
-                      onPress={() => handlePlaceOrder("bill")}
-                    >
-                      <Text style={styles.billButtonText}>Bill</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <TouchableOpacity
+                    style={styles.billButton}
+                    onPress={() => handlePlaceOrder("bill")}
+                  >
+                    <Text style={styles.billButtonText}>Bill</Text>
+                  </TouchableOpacity>
                 </View>
-                </>
+              </View>
+            </>
             // </KeyboardAvoidingView>
           }
         />
@@ -795,77 +850,103 @@ export default function MenuScreen() {
 
       <Modal
         visible={showCustomerPicker}
-        transparent={true}
+        transparent={false}
         animationType="slide"
         onRequestClose={() => setShowCustomerPicker(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setShowCustomerPicker(false)}>
-          <View style={styles.modalOverlay} />
-        </TouchableWithoutFeedback>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Customer</Text>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+          <TouchableOpacity
+            onPress={() => setShowCustomerPicker(false)}
+            style={{ padding: 12 }}
+          >
+            <Ionicons name="close" size={24} color="#000" />
+          </TouchableOpacity>
+          <TouchableWithoutFeedback
+            onPress={() => setShowCustomerPicker(false)}
+          >
+            <View style={styles.modalOverlay} />
+          </TouchableWithoutFeedback>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Customer</Text>
 
-          <View style={styles.addContainer}>
-            <Text style={styles.subSectionTitle}>Add New Customer</Text>
-            <TextInput
-              style={styles.addInput}
-              placeholder="Full Name"
-              value={newCustomer}
-              onChangeText={setNewCustomer}
-              placeholderTextColor="#888"
-            />
-            <View style={styles.phoneInputContainer}>
+            <View style={styles.addContainer}>
+              <Text style={styles.subSectionTitle}>Add New Customer</Text>
               <TextInput
-                style={[styles.addInput, styles.emailInput]}
-                placeholder="Email"
-                value={newEmail}
-                onChangeText={setNewEmail}
+                style={styles.addInput}
+                placeholder="Full Name"
+                value={newCustomer}
+                onChangeText={setNewCustomer}
                 placeholderTextColor="#888"
               />
+              <View style={styles.phoneInputContainer}>
+                <TextInput
+                  style={[styles.addInput, styles.emailInput]}
+                  placeholder="Email"
+                  value={newEmail}
+                  onChangeText={setNewEmail}
+                  placeholderTextColor="#888"
+                />
+                <TextInput
+                  style={[styles.addInput, styles.phoneInput]}
+                  placeholder="Phone Number"
+                  keyboardType="phone-pad"
+                  value={newPhone}
+                  onChangeText={setNewPhone}
+                  placeholderTextColor="#888"
+                />
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.addButtonModal,
+                  (!newCustomer.trim() || !newPhone.trim()) &&
+                    styles.disabledAddButton,
+                ]}
+                onPress={handleAddCustomer}
+                disabled={!newCustomer.trim() || !newPhone.trim()}
+              >
+                <Text style={styles.addButtonTextModal}>Add Customer</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.subSectionTitle, { marginTop: 15 }]}>
+              Existing Customers
+            </Text>
+            <View style={styles.searchContainer}>
+              <Ionicons
+                name="search"
+                size={20}
+                color="#888"
+                style={styles.searchIcon}
+              />
               <TextInput
-                style={[styles.addInput, styles.phoneInput]}
-                placeholder="Phone Number"
-                keyboardType="phone-pad"
-                value={newPhone}
-                onChangeText={setNewPhone}
+                placeholder="Search customers..."
                 placeholderTextColor="#888"
+                value={customerSearchText}
+                onChangeText={setCustomerSearchText}
+                style={styles.searchInput}
               />
             </View>
-            <TouchableOpacity
-              style={[
-                styles.addButtonModal,
-                (!newCustomer.trim() || !newPhone.trim()) &&
-                  styles.disabledAddButton,
-              ]}
-              onPress={handleAddCustomer}
-              disabled={!newCustomer.trim() || !newPhone.trim()}
-            >
-              <Text style={styles.addButtonTextModal}>Add Customer</Text>
-            </TouchableOpacity>
-          </View>
 
-          <Text style={[styles.subSectionTitle, { marginTop: 15 }]}>
-            Existing Customers
-          </Text>
-          <FlatList
-            data={customers}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  setSelectedCustomer(item);
-                  setShowCustomerPicker(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>
-                  {item.full_name} ({item.country_code || "971"}
-                  {item.phone_number})
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
+            <FlatList
+              data={searchedCustomers}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setSelectedCustomer(item);
+                    setShowCustomerPicker(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>
+                    {item.full_name} ({item.country_code || "971"}
+                    {item.phone_number})
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </SafeAreaView>
       </Modal>
 
       {/* print modal */}
@@ -1006,7 +1087,50 @@ export default function MenuScreen() {
           />
         </View>
       </Modal>
+      <Modal
+        visible={showWaiterPicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowWaiterPicker(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowWaiterPicker(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Select Waiter</Text>
 
+            <View style={styles.searchContainer}>
+              <Ionicons
+                name="search"
+                size={20}
+                color="#888"
+                style={styles.searchIcon}
+              />
+              <TextInput
+                placeholder="Search waiters..."
+                placeholderTextColor="#888"
+                value={waiterSearchText}
+                onChangeText={setWaiterSearchText}
+                style={styles.searchInput}
+              />
+            </View>
+          <FlatList
+            data={searchedWaiters}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  setSelectedWaiter(item);
+                  setShowWaiterPicker(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>{item.name}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </Modal>
       <Modal
         visible={showDeliveryBoyPicker}
         transparent={true}
@@ -1135,6 +1259,38 @@ export default function MenuScreen() {
 }
 
 const styles = StyleSheet.create({
+   brandingSection: {
+    backgroundColor: "#ffffff",
+    paddingTop: 50,
+    // paddingBottom: 15,
+    paddingHorizontal: 20, // Remove horizontal padding to align with other content
+  },
+
+  brandingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    // paddingHorizontal: 20, // Add padding only to the container
+  },
+
+  brandLogo: {
+    height: 32,
+    width: 32,
+    marginRight: 12,
+  },
+
+  brandText: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    letterSpacing: 0.5,
+  },
+
+  // brandingDivider: {
+  //   height: 1,
+  //   backgroundColor: "#f5f5f5",
+  //   marginTop: 15,
+  //   // marginHorizontal: 20,
+  // },
   container: {
     flex: 1,
     backgroundColor: "#ffffffff",
@@ -1510,18 +1666,18 @@ const styles = StyleSheet.create({
   //   borderColor: "#e0d7f0",
   // },
   totalSection: {
-  padding: 16,
-  backgroundColor: '#fff',
-  borderTopWidth: 1,
-  borderTopColor: '#eee',
-  // For iOS shadow
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: -2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  // For Android elevation
-  elevation: 5,
-},
+    padding: 16,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    // For iOS shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    // For Android elevation
+    elevation: 5,
+  },
   totalLabel: {
     fontSize: 18,
     fontWeight: "bold",
@@ -1810,3 +1966,1734 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+// new design
+// import React, { useState, useEffect } from "react";
+// import {
+//   View,
+//   Text,
+//   TextInput,
+//   FlatList,
+//   TouchableOpacity,
+//   ScrollView,
+//   StyleSheet,
+//   SafeAreaView,
+//   Dimensions,
+//   Modal,
+//   TouchableWithoutFeedback,
+//   KeyboardAvoidingView,
+//   Platform,
+//   ActivityIndicator,
+//   Alert,
+//   Image,
+// } from "react-native";
+// import { Ionicons } from "@expo/vector-icons";
+// import { useNavigation } from "@react-navigation/native";
+// import { MenuAPI, UserAPI, OrderAPI, AuthAPI } from "../api/api";
+// import * as Print from "expo-print";
+// import { WebView } from "react-native-webview";
+// import Footer from "../components/Footer";
+// const { width } = Dimensions.get("window");
+// const ITEM_WIDTH = (width - 40) / 2;
+
+// const orderTypes = ["Dine in", "Delivery", "Takeaway", "Online Order"];
+
+// export default function MenuScreen() {
+//   const [selectedCategory, setSelectedCategory] = useState("All");
+//   const [searchText, setSearchText] = useState("");
+//   const [cart, setCart] = useState([]);
+//   const [selectedOrderType, setSelectedOrderType] = useState("Dine in");
+//   const [deliveryFee, setDeliveryFee] = useState("0.00");
+//   const [selectedCustomer, setSelectedCustomer] = useState(null);
+//   const [selectedAddress, setSelectedAddress] = useState(null);
+//   const [selectedTable, setSelectedTable] = useState(null);
+//   const [numberOfGuests, setNumberOfGuests] = useState("0");
+//   const [selectedDeliveryBoy, setSelectedDeliveryBoy] = useState(null);
+//   const [selectedCounter, setSelectedCounter] = useState(null);
+//   const [selectedPlatform, setSelectedPlatform] = useState(null);
+
+//   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
+//   const [showAddressPicker, setShowAddressPicker] = useState(false);
+//   const [showTablePicker, setShowTablePicker] = useState(false);
+//   const [showDeliveryBoyPicker, setShowDeliveryBoyPicker] = useState(false);
+//   const [showCounterPicker, setShowCounterPicker] = useState(false);
+//   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
+
+//   const [newCustomer, setNewCustomer] = useState("");
+//   const [newPhone, setNewPhone] = useState("");
+//   const [newEmail, setNewEmail] = useState("");
+//   const [newAddress, setNewAddress] = useState("");
+
+//   const [menuItems, setMenuItems] = useState([]);
+//   const [categories, setCategories] = useState([]);
+//   const [customers, setCustomers] = useState([]);
+//   const [tables, setTables] = useState([]);
+//   const [deliveryBoys, setDeliveryBoys] = useState([]);
+//   const [counters, setCounters] = useState([]);
+//   const [platforms, setPlatforms] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+
+//   const [cartTotalItems, setCartTotalItems] = useState(0);
+
+//   const [printDocuments, setPrintDocuments] = useState([]);
+//   const [currentPrintIndex, setCurrentPrintIndex] = useState(0);
+//   const [isPrinting, setIsPrinting] = useState(false);
+//   const [showPrintPreview, setShowPrintPreview] = useState(false);
+
+//   const [printActionType, setPrintActionType] = useState("");
+
+//   const [filterItems, setFilterItems] = useState("All");
+
+//   const navigation = useNavigation();
+
+//   useEffect(() => {
+//     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+//     setCartTotalItems(total);
+//   }, [cart]);
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         setLoading(true);
+
+//         const [
+//           categoriesResponse,
+//           menusResponse,
+//           customersResponse,
+//           tablesResponse,
+//           deliveryBoysResponse,
+//           countersResponse,
+//           platformsResponse,
+//         ] = await Promise.all([
+//           MenuAPI.getCategories(),
+//           MenuAPI.getMenuItems(),
+//           UserAPI.getCustomers(),
+//           OrderAPI.getTables(),
+//           UserAPI.getStaff("delivery"),
+//           OrderAPI.getCounters(),
+//           OrderAPI.getPlatforms(),
+//         ]);
+
+//         setCategories(categoriesResponse);
+//         setMenuItems(menusResponse);
+//         setCustomers(customersResponse);
+//         setTables(tablesResponse);
+//         setDeliveryBoys(deliveryBoysResponse);
+//         setCounters(countersResponse);
+//         setPlatforms(platformsResponse);
+//       } catch (err) {
+//         setError(err.message || "Failed to fetch data");
+//         Alert.alert("Error", "Failed to load data. Please try again.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
+
+//   useEffect(() => {
+//     setSelectedTable(null);
+//     setNumberOfGuests("1");
+//     setSelectedDeliveryBoy(null);
+//     setSelectedCounter(null);
+//     setSelectedPlatform(null);
+//     setSelectedAddress(null);
+//     setDeliveryFee("0.00");
+//   }, [selectedOrderType]);
+
+//   // const filteredItems = menuItems.filter(item =>
+//   //   (selectedCategory === 'All' || item.category === selectedCategory) &&
+//   //   item.name.toLowerCase().includes(searchText.toLowerCase())
+//   // );
+
+//   const searchedItems = menuItems.filter((item) =>
+//     item.name.toLowerCase().includes(searchText.toLowerCase())
+//   );
+
+//   const categoryMap = {};
+//   categories.forEach((cat) => {
+//     categoryMap[cat.id] = cat.name;
+//   });
+
+//   const fetchFilteredItems = async (categoryName) => {
+//     try {
+//       setLoading(true);
+//       const filteredResponse = await MenuAPI.getMenuItemFiltered(categoryName);
+//       setMenuItems(filteredResponse);
+//       setLoading(false);
+//     } catch (error) {
+//       setError(error.message || "Failed to filter items");
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleCategorySelect = (category) => {
+//     setSelectedCategory(category);
+//     if (category === "all") {
+//       fetchData();
+//     } else {
+//       fetchFilteredItems(category);
+//     }
+//   };
+
+//   const handleLogout = async () => {
+//     try {
+//       await AuthAPI.logout();
+//       navigation.replace("Login");
+//     } catch (error) {
+//       Alert.alert("Error", "Failed to logout. Please try again.");
+//     }
+//   };
+
+//   const handleAddToCart = (item) => {
+//     setCart((prev) => {
+//       const existingItem = prev.find((cartItem) => cartItem.id === item.id);
+//       if (existingItem) {
+//         return prev.map((cartItem) =>
+//           cartItem.id === item.id
+//             ? { ...cartItem, quantity: cartItem.quantity + 1 }
+//             : cartItem
+//         );
+//       } else {
+//         return [...prev, { ...item, quantity: 1 }];
+//       }
+//     });
+//   };
+
+//   const handleResetCart = () => {
+//     setCart([]);
+//     // setTotalItems(0);
+//     // Optionally reset other related states
+//   };
+
+//   const handleCartQuantityChange = (itemId, change) => {
+//     setCart((prev) => {
+//       const updatedCart = prev
+//         .map((item) => {
+//           if (item.id === itemId) {
+//             const newQuantity = item.quantity + change;
+//             return newQuantity > 0 ? { ...item, quantity: newQuantity } : null;
+//           }
+//           return item;
+//         })
+//         .filter(Boolean);
+
+//       return updatedCart;
+//     });
+//   };
+
+//   const handleAddCustomer = async () => {
+//     if (newCustomer.trim() !== "" && newPhone.trim() !== "") {
+//       try {
+//         const customerData = {
+//           full_name: newCustomer,
+//           phone_number: newPhone,
+//           email: newEmail,
+//         };
+//         const createdCustomer = await UserAPI.createCustomer(customerData);
+//         setCustomers([...customers, createdCustomer]);
+//         setSelectedCustomer(createdCustomer);
+//         setNewCustomer("");
+//         setNewPhone("");
+//         setNewEmail("");
+//         setShowCustomerPicker(false);
+//       } catch (error) {
+//         Alert.alert("Error", "Failed to create customer");
+//       }
+//     } else {
+//       Alert.alert("Error", "Name and phone are required");
+//     }
+//   };
+
+//   const handlePlaceOrder = async (actionType) => {
+//     try {
+//       if (!["kot", "bill"].includes(actionType?.toLowerCase())) {
+//         Alert.alert("Invalid Action", "Action must be either KOT or BILL");
+//         return;
+//       }
+
+//       if (cart.length === 0) {
+//         Alert.alert("Error", "Please add items to the order");
+//         return;
+//       }
+
+//       // if (!selectedCustomer) {
+//       //   Alert.alert("Error", "Please select a customer");
+//       //   return;
+//       // }
+
+//       // switch (selectedOrderType) {
+//       //   case "Dine in":
+//       //     if (!selectedTable) {
+//       //       Alert.alert("Error", "Please select a table");
+//       //       return;
+//       //     }
+//       //     if (!numberOfGuests || parseInt(numberOfGuests) <= 0) {
+//       //       Alert.alert("Error", "Please enter valid number of guests");
+//       //       return;
+//       //     }
+//       //     break;
+//       //   case "Delivery":
+//       //     if (!selectedAddress || !selectedDeliveryBoy) {
+//       //       Alert.alert("Error", "Please complete delivery details");
+//       //       return;
+//       //     }
+//       //     break;
+//       //   case "Takeaway":
+//       //     if (!selectedCounter) {
+//       //       Alert.alert("Error", "Please select a counter");
+//       //       return;
+//       //     }
+//       //     break;
+//       //   case "Online Order":
+//       //     if (!selectedAddress || !selectedPlatform) {
+//       //       Alert.alert("Error", "Please complete online order details");
+//       //       return;
+//       //     }
+//       //     break;
+//       // }
+
+//       const orderData = {
+//         order_type: selectedOrderType?.toLocaleLowerCase().replace(" ", "_"),
+//         customer: selectedCustomer?.id,
+//         table: selectedTable?.id || null,
+//         delivery_boy_id: selectedDeliveryBoy?.id || null,
+//         delivery_fee: deliveryFee || 0,
+//         guest_count: parseInt(numberOfGuests) || null,
+//         total_price: totalAmount,
+//         items: cart.map((item) => ({
+//           menu_id: item.id,
+//           quantity: item.quantity,
+//           price: item.price,
+//         })),
+//       };
+
+//       const response = await OrderAPI.createOrder(orderData);
+
+//       if (response?.id) {
+//         try {
+//           //  array of print documents
+//           const docs = await OrderAPI.printOrderBill(response.id, actionType);
+//           setPrintDocuments(docs);
+//           setCurrentPrintIndex(0);
+//           setShowPrintPreview(true);
+
+//           handlePrintAll();
+//         } catch (printError) {
+//           console.error("Printing failed:", printError);
+//           Alert.alert(
+//             "Printing Error",
+//             "Order was created but printing failed"
+//           );
+//         }
+
+//         // Alert.alert('Success', 'Order placed successfully');
+//         // setCart([]);
+//         // navigation.navigate('Orders');
+//       } else {
+//         throw new Error("Order creation failed: No ID returned");
+//       }
+//     } catch (error) {
+//       console.error(
+//         "Order submission error:",
+//         error?.response?.data || error.message
+//       );
+//       Alert.alert("Error", error.message || "Failed to place order");
+//     }
+//   };
+
+//   //printingfunc
+//   const handlePrintAll = async () => {
+//     setIsPrinting(true);
+//     try {
+//       for (let i = 0; i < printDocuments.length; i++) {
+//         setCurrentPrintIndex(i);
+
+//         await new Promise((resolve) => setTimeout(resolve, 300));
+
+//         await Print.printAsync({
+//           html: printDocuments[i].html,
+//           orientation: Print.Orientation.portrait,
+//           paperSize: { width: 210, height: 297 },
+//         });
+
+//         await new Promise((resolve) => setTimeout(resolve, 500));
+//       }
+
+//       setCart([]);
+//     } catch (error) {
+//       Alert.alert("Print Error", `Failed to print: ${error.message}`);
+//     } finally {
+//       setIsPrinting(false);
+//     }
+//   };
+
+//   const closePrintPreview = () => {
+//     setShowPrintPreview(false);
+//     navigation.navigate("Orders");
+//   };
+
+//   const renderMenuItem = ({ item }) => (
+//     <View style={styles.gridItem}>
+
+//       <Text style={styles.itemName} numberOfLines={1}>
+//         {item.name}
+//       </Text>
+//       <Text style={styles.itemPrice}>QAR {Number(item.price).toFixed(2)}</Text>
+//       <TouchableOpacity
+//         style={styles.addButton}
+//         onPress={() => handleAddToCart(item)}
+//       >
+//         <Text style={styles.addButtonText}>ADD</Text>
+//       </TouchableOpacity>
+//     </View>
+//   );
+
+//   const renderCartItem = ({ item }) => (
+//     <View style={styles.cartItem}>
+//       <Text style={styles.cartItemName} numberOfLines={1}>
+//         {item.name}
+//       </Text>
+//       <View style={styles.cartItemControls}>
+//         <TouchableOpacity
+//           style={styles.cartQuantityButton}
+//           onPress={() => handleCartQuantityChange(item.id, -1)}
+//         >
+//           <Ionicons name="remove" size={16} color="#7e4bcc" />
+//         </TouchableOpacity>
+//         <Text style={styles.cartQuantityText}>{item.quantity}</Text>
+//         <TouchableOpacity
+//           style={styles.cartQuantityButton}
+//           onPress={() => handleCartQuantityChange(item.id, 1)}
+//         >
+//           <Ionicons name="add" size={16} color="#7e4bcc" />
+//         </TouchableOpacity>
+//         <Text style={styles.cartItemPrice}>
+//           QAR {(item.price * item.quantity).toFixed(2)}
+//         </Text>
+//       </View>
+//     </View>
+//   );
+
+//   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+//   const totalAmount =
+//     cart.reduce((sum, item) => sum + item.price * item.quantity, 0) +
+//     parseFloat(deliveryFee || 0);
+
+//   if (loading) {
+//     return (
+//       <View style={styles.loadingContainer}>
+//         <ActivityIndicator size="large" color="#7e4bcc" />
+//         <Text style={styles.loadingText}>Loading menu...</Text>
+//       </View>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <View style={styles.errorContainer}>
+//         <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+//         <Text style={styles.errorText}>{error}</Text>
+//         <TouchableOpacity
+//           style={styles.retryButton}
+//           onPress={() => navigation.replace("Menu")}
+//         >
+//           <Text style={styles.retryButtonText}>Retry</Text>
+//         </TouchableOpacity>
+//       </View>
+//     );
+//   }
+//   return (
+//      <SafeAreaView style={styles.container}>
+//       {/* Top Icons */}
+//       <View style={styles.topIcons}>
+//         <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+//           <Ionicons name="log-out-outline" size={24} color="#fff" />
+//         </TouchableOpacity>
+
+//         <TouchableOpacity
+//           onPress={() => navigation.navigate("Orders")}
+//           style={styles.iconButton}
+//         >
+//           <Ionicons name="cart-outline" size={24} color="#fff" />
+//           {totalItems > 0 && (
+//             <View style={styles.cartBadge}>
+//               <Text style={styles.cartCount}>{totalItems}</Text>
+//             </View>
+//           )}
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* Header */}
+//       <View style={styles.header}>
+//         <Text style={styles.title}>NasResto</Text>
+//       </View>
+
+//       {/* Main Content */}
+//       <View style={styles.content}>
+//         {/* Search */}
+//         <View style={styles.searchContainer}>
+//           <Ionicons
+//             name="search-outline"
+//             size={20}
+//             color="#9ca3af"
+//             style={styles.searchIcon}
+//           />
+//           <TextInput
+//             placeholder="Search menu items..."
+//             placeholderTextColor="#9ca3af"
+//             value={searchText}
+//             onChangeText={setSearchText}
+//             style={styles.searchInput}
+//           />
+//         </View>
+
+//         {/* Categories Header */}
+//         <View style={styles.categoryHeader}>
+//           <Text style={styles.sectionTitle}>Categories</Text>
+//           <TouchableOpacity onPress={() => handleCategorySelect("All")}>
+//             <Text style={styles.viewAll}>View All</Text>
+//           </TouchableOpacity>
+//         </View>
+
+//         {/* Categories List */}
+//         <ScrollView
+//           horizontal
+//           showsHorizontalScrollIndicator={false}
+//           contentContainerStyle={styles.categoriesContainer}
+//         >
+//           {categories.map((category) => (
+//             <TouchableOpacity
+//               key={category.id}
+//               onPress={() => handleCategorySelect(category.name)}
+//               style={[
+//                 styles.categoryItem,
+//                 selectedCategory === category.name && styles.selectedCategory,
+//               ]}
+//             >
+//               <Text
+//                 style={[
+//                   styles.categoryText,
+//                   selectedCategory === category.name &&
+//                     styles.selectedCategoryText,
+//                 ]}
+//               >
+//                 {category.name}
+//               </Text>
+//             </TouchableOpacity>
+//           ))}
+//         </ScrollView>
+
+//         {/* Menu Items */}
+//         <FlatList
+//           data={searchedItems}
+//           numColumns={2}
+//           keyExtractor={(item) => item.id.toString()}
+//           renderItem={renderMenuItem}
+//           contentContainerStyle={styles.gridContainer}
+//           showsVerticalScrollIndicator={false}
+//           ListEmptyComponent={
+//             <View style={styles.emptyContainer}>
+//               <Ionicons name="restaurant-outline" size={64} color="#7c3aed" />
+//               <Text style={styles.emptyText}>No items found</Text>
+//               <Text style={styles.emptySubtext}>
+//                 Try another category or search term
+//               </Text>
+//             </View>
+//           }
+//           ListHeaderComponent={
+//             <>
+//               <Text style={styles.menuTitle}>Menu</Text>
+
+//               {cart.length > 0 && (
+//                 <View style={styles.cartItemsContainer}>
+//                   <View style={styles.cartHeaderRow}>
+//                     <Text style={styles.sectionTitle}>
+//                       Order Items ({totalItems})
+//                     </Text>
+//                     <TouchableOpacity onPress={handleResetCart}>
+//                       <Text style={styles.resetText}>Reset</Text>
+//                     </TouchableOpacity>
+//                   </View>
+
+//                   <FlatList
+//                     data={cart}
+//                     renderItem={renderCartItem}
+//                     keyExtractor={(item) => item.id.toString()}
+//                     contentContainerStyle={styles.cartItemsList}
+//                   />
+//                 </View>
+//               )}
+//             </>
+//           }
+//           ListFooterComponent={
+//             <ScrollView
+//               contentContainerStyle={styles.orderFormContainer}
+//               keyboardShouldPersistTaps="handled"
+//             >
+//               <Text style={styles.sectionTitle}>Order Details</Text>
+
+//               <View style={styles.sectionBox}>
+//                 <Text style={styles.subSectionTitle}>Order Type</Text>
+//                 <View style={styles.orderTypeContainer}>
+//                   {orderTypes.map((type) => (
+//                     <TouchableOpacity
+//                       key={type}
+//                       style={styles.orderTypeButton}
+//                       onPress={() => setSelectedOrderType(type)}
+//                     >
+//                       <View
+//                         style={[
+//                           styles.radioOuter,
+//                           selectedOrderType === type &&
+//                             styles.radioOuterSelected,
+//                         ]}
+//                       >
+//                         {selectedOrderType === type && (
+//                           <View style={styles.radioInner} />
+//                         )}
+//                       </View>
+//                       <Text style={styles.orderTypeText}>{type}</Text>
+//                     </TouchableOpacity>
+//                   ))}
+//                 </View>
+//               </View>
+
+//               {selectedOrderType === "Dine in" && (
+//                 <View style={styles.sectionBox}>
+//                   <Text style={styles.subSectionTitle}>Select Table</Text>
+//                   <TouchableOpacity
+//                     style={styles.pickerButton}
+//                     onPress={() => setShowTablePicker(true)}
+//                   >
+//                     <Text
+//                       style={
+//                         selectedTable
+//                           ? styles.pickerText
+//                           : styles.pickerPlaceholder
+//                       }
+//                     >
+//                       {selectedTable?.name || "Select a table..."}
+//                     </Text>
+//                     <Ionicons name="chevron-down-outline" size={20} color="#9ca3af" />
+//                   </TouchableOpacity>
+
+//                   <Text style={styles.subSectionTitle}>Number of Guests</Text>
+//                   <TextInput
+//                     style={styles.feeInput}
+//                     keyboardType="numeric"
+//                     value={numberOfGuests}
+//                     onChangeText={setNumberOfGuests}
+//                     placeholder="0"
+//                     placeholderTextColor="#9ca3af"
+//                   />
+//                 </View>
+//               )}
+
+//               {selectedOrderType === "Delivery" && (
+//                 <View style={styles.sectionBox}>
+//                   <Text style={styles.subSectionTitle}>
+//                     Select Delivery Boy
+//                   </Text>
+//                   <TouchableOpacity
+//                     style={styles.pickerButton}
+//                     onPress={() => setShowDeliveryBoyPicker(true)}
+//                   >
+//                     <Text
+//                       style={
+//                         selectedDeliveryBoy
+//                           ? styles.pickerText
+//                           : styles.pickerPlaceholder
+//                       }
+//                     >
+//                       {selectedDeliveryBoy?.name ||
+//                         "Select a delivery boy..."}
+//                     </Text>
+//                     <Ionicons name="chevron-down-outline" size={20} color="#9ca3af" />
+//                   </TouchableOpacity>
+
+//                   <Text style={styles.subSectionTitle}>Delivery Fee</Text>
+//                   <TextInput
+//                     style={styles.feeInput}
+//                     keyboardType="numeric"
+//                     value={deliveryFee}
+//                     onChangeText={setDeliveryFee}
+//                     placeholder="0.00"
+//                     placeholderTextColor="#9ca3af"
+//                   />
+//                 </View>
+//               )}
+
+//               {selectedOrderType === "Takeaway" && (
+//                 <View style={styles.sectionBox}>
+//                   <Text style={styles.subSectionTitle}>Select Counter</Text>
+//                   <TouchableOpacity
+//                     style={styles.pickerButton}
+//                     onPress={() => setShowCounterPicker(true)}
+//                   >
+//                     <Text
+//                       style={
+//                         selectedCounter
+//                           ? styles.pickerText
+//                           : styles.pickerPlaceholder
+//                       }
+//                     >
+//                       {selectedCounter?.name || "Select a counter..."}
+//                     </Text>
+//                     <Ionicons name="chevron-down-outline" size={20} color="#9ca3af" />
+//                   </TouchableOpacity>
+//                 </View>
+//               )}
+
+//               {selectedOrderType === "Online Order" && (
+//                 <View style={styles.sectionBox}>
+//                   <Text style={styles.subSectionTitle}>Select Platform</Text>
+//                   <TouchableOpacity
+//                     style={styles.pickerButton}
+//                     onPress={() => setShowPlatformPicker(true)}
+//                   >
+//                     <Text
+//                       style={
+//                         selectedPlatform
+//                           ? styles.pickerText
+//                           : styles.pickerPlaceholder
+//                       }
+//                     >
+//                       {selectedPlatform?.name || "Select a platform..."}
+//                     </Text>
+//                     <Ionicons name="chevron-down-outline" size={20} color="#9ca3af" />
+//                   </TouchableOpacity>
+
+//                   <Text style={styles.subSectionTitle}>Delivery Fee</Text>
+//                   <TextInput
+//                     style={styles.feeInput}
+//                     keyboardType="numeric"
+//                     value={deliveryFee}
+//                     onChangeText={setDeliveryFee}
+//                     placeholder="0.00"
+//                     placeholderTextColor="#9ca3af"
+//                   />
+//                 </View>
+//               )}
+
+//               <View style={styles.sectionBox}>
+//                 <Text style={styles.subSectionTitle}>Select Customer</Text>
+//                 <TouchableOpacity
+//                   style={styles.pickerButton}
+//                   onPress={() => setShowCustomerPicker(true)}
+//                 >
+//                   {selectedCustomer ? (
+//                     <Text style={styles.pickerText}>
+//                       {selectedCustomer.full_name}
+//                     </Text>
+//                   ) : (
+//                     <Text style={styles.pickerPlaceholder}>
+//                       Select a customer...
+//                     </Text>
+//                   )}
+//                   <Ionicons name="chevron-down-outline" size={20} color="#9ca3af" />
+//                 </TouchableOpacity>
+
+//                 {(selectedOrderType === "Delivery" ||
+//                   selectedOrderType === "Online Order") && (
+//                   <>
+//                     <Text style={styles.subSectionTitle}>
+//                       Delivery Address
+//                     </Text>
+//                     <TouchableOpacity
+//                       style={styles.pickerButton}
+//                       onPress={() => setShowAddressPicker(true)}
+//                     >
+//                       <Text
+//                         style={
+//                           selectedAddress
+//                             ? styles.pickerText
+//                             : styles.pickerPlaceholder
+//                         }
+//                       >
+//                         {selectedAddress || "Enter delivery address..."}
+//                       </Text>
+//                       <Ionicons name="chevron-down-outline" size={20} color="#9ca3af" />
+//                     </TouchableOpacity>
+//                   </>
+//                 )}
+//               </View>
+
+//               {/* Extra spacing for total section */}
+//               <View style={{ height: 120 }} />
+//             </ScrollView>
+//           }
+//         />
+//       </View>
+
+//       {/* Fixed Total Section */}
+//       {cart.length > 0 && (
+//         <View style={styles.totalSection}>
+//           <Text style={styles.totalLabel}>Total Payment</Text>
+//           <Text style={styles.totalAmount}>
+//             QAR {totalAmount.toFixed(2)}
+//           </Text>
+
+//           <View style={styles.actionButtons}>
+//             <TouchableOpacity
+//               style={styles.kotButton}
+//               onPress={() => handlePlaceOrder("kot")}
+//             >
+//               <Text style={styles.kotButtonText}>KOT & Bill</Text>
+//             </TouchableOpacity>
+
+//             <TouchableOpacity
+//               style={styles.billButton}
+//               onPress={() => handlePlaceOrder("bill")}
+//             >
+//               <Text style={styles.billButtonText}>Bill Only</Text>
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+//       )}
+//         {/* Footer Navigation */}
+//       <Footer navigation={navigation} handleLogout={handleLogout} activeTab="Menu" />
+
+//       <Modal
+//         visible={showCustomerPicker}
+//         transparent={true}
+//         animationType="slide"
+//         onRequestClose={() => setShowCustomerPicker(false)}
+//       >
+//         <TouchableWithoutFeedback onPress={() => setShowCustomerPicker(false)}>
+//           <View style={styles.modalOverlay} />
+//         </TouchableWithoutFeedback>
+//         <View style={styles.modalContent}>
+//           <Text style={styles.modalTitle}>Select Customer</Text>
+
+//           <View style={styles.addContainer}>
+//             <Text style={styles.subSectionTitle}>Add New Customer</Text>
+//             <TextInput
+//               style={styles.addInput}
+//               placeholder="Full Name"
+//               value={newCustomer}
+//               onChangeText={setNewCustomer}
+//               placeholderTextColor="#888"
+//             />
+//             <View style={styles.phoneInputContainer}>
+//               <TextInput
+//                 style={[styles.addInput, styles.emailInput]}
+//                 placeholder="Email"
+//                 value={newEmail}
+//                 onChangeText={setNewEmail}
+//                 placeholderTextColor="#888"
+//               />
+//               <TextInput
+//                 style={[styles.addInput, styles.phoneInput]}
+//                 placeholder="Phone Number"
+//                 keyboardType="phone-pad"
+//                 value={newPhone}
+//                 onChangeText={setNewPhone}
+//                 placeholderTextColor="#888"
+//               />
+//             </View>
+//             <TouchableOpacity
+//               style={[
+//                 styles.addButtonModal,
+//                 (!newCustomer.trim() || !newPhone.trim()) &&
+//                   styles.disabledAddButton,
+//               ]}
+//               onPress={handleAddCustomer}
+//               disabled={!newCustomer.trim() || !newPhone.trim()}
+//             >
+//               <Text style={styles.addButtonTextModal}>Add Customer</Text>
+//             </TouchableOpacity>
+//           </View>
+
+//           <Text style={[styles.subSectionTitle, { marginTop: 15 }]}>
+//             Existing Customers
+//           </Text>
+//           <FlatList
+//             data={customers}
+//             keyExtractor={(item) => item.id.toString()}
+//             renderItem={({ item }) => (
+//               <TouchableOpacity
+//                 style={styles.modalItem}
+//                 onPress={() => {
+//                   setSelectedCustomer(item);
+//                   setShowCustomerPicker(false);
+//                 }}
+//               >
+//                 <Text style={styles.modalItemText}>
+//                   {item.full_name} ({item.country_code || "971"}
+//                   {item.phone_number})
+//                 </Text>
+//               </TouchableOpacity>
+//             )}
+//           />
+//         </View>
+//       </Modal>
+
+//       {/* print modal */}
+//       <Modal
+//         visible={showPrintPreview}
+//         transparent={false}
+//         animationType="slide"
+//       >
+//         <SafeAreaView style={styles.printPreviewContainer}>
+//           <View style={styles.printPreviewHeader}>
+//             <Text style={styles.printPreviewTitle}>
+//               {/* {printHtml.includes('KITCHEN ORDER TICKET') ? 'Kitchen Ticket' : 'Customer Receipt'} */}
+//             </Text>
+//             <TouchableOpacity onPress={closePrintPreview}>
+//               <Ionicons name="close" size={24} color="#5d3a7e" />
+//             </TouchableOpacity>
+//           </View>
+
+//           <WebView
+//             originWhitelist={["*"]}
+//             source={{ html: printDocuments[currentPrintIndex]?.html || "" }}
+//             style={styles.webview}
+//           />
+
+//           <View style={styles.printActions}>
+//             <TouchableOpacity
+//               style={[styles.printButton, isPrinting && styles.disabledButton]}
+//               onPress={() => handlePrintAll()}
+//               disabled={isPrinting}
+//             >
+//               {isPrinting ? (
+//                 <ActivityIndicator size="small" color="#fff" />
+//               ) : (
+//                 <Text style={styles.printButtonText}>Print All</Text>
+//               )}
+//             </TouchableOpacity>
+
+//             <TouchableOpacity
+//               style={styles.cancelPrintButton}
+//               onPress={closePrintPreview}
+//             >
+//               <Text style={styles.cancelPrintButtonText}>Close</Text>
+//             </TouchableOpacity>
+//           </View>
+//         </SafeAreaView>
+//       </Modal>
+
+//       <Modal
+//         visible={showAddressPicker}
+//         transparent={true}
+//         animationType="slide"
+//         onRequestClose={() => setShowAddressPicker(false)}
+//       >
+//         <TouchableWithoutFeedback onPress={() => setShowAddressPicker(false)}>
+//           <View style={styles.modalOverlay} />
+//         </TouchableWithoutFeedback>
+//         <View style={styles.modalContent}>
+//           <Text style={styles.modalTitle}>Select Address</Text>
+
+//           <View style={styles.addContainer}>
+//             <TextInput
+//               style={styles.addInput}
+//               placeholder="Enter new address..."
+//               value={newAddress}
+//               onChangeText={setNewAddress}
+//               placeholderTextColor="#888"
+//             />
+//             <TouchableOpacity
+//               style={[
+//                 styles.addButtonModal,
+//                 !newAddress.trim() && styles.disabledAddButton,
+//               ]}
+//               onPress={() => {
+//                 setSelectedAddress(newAddress);
+//                 setNewAddress("");
+//                 setShowAddressPicker(false);
+//               }}
+//               disabled={!newAddress.trim()}
+//             >
+//               <Text style={styles.addButtonTextModal}>Add Address</Text>
+//             </TouchableOpacity>
+//           </View>
+
+//           <Text style={[styles.subSectionTitle, { marginTop: 15 }]}>
+//             Saved Addresses
+//           </Text>
+//           {selectedCustomer?.addresses?.length > 0 ? (
+//             <FlatList
+//               data={selectedCustomer.addresses}
+//               keyExtractor={(item, index) => index.toString()}
+//               renderItem={({ item }) => (
+//                 <TouchableOpacity
+//                   style={styles.modalItem}
+//                   onPress={() => {
+//                     setSelectedAddress(item);
+//                     setShowAddressPicker(false);
+//                   }}
+//                 >
+//                   <Text style={styles.modalItemText}>{item}</Text>
+//                 </TouchableOpacity>
+//               )}
+//             />
+//           ) : (
+//             <Text style={styles.noAddressText}>
+//               No saved addresses for this customer
+//             </Text>
+//           )}
+//         </View>
+//       </Modal>
+
+//       <Modal
+//         visible={showTablePicker}
+//         transparent={true}
+//         animationType="slide"
+//         onRequestClose={() => setShowTablePicker(false)}
+//       >
+//         <TouchableWithoutFeedback onPress={() => setShowTablePicker(false)}>
+//           <View style={styles.modalOverlay} />
+//         </TouchableWithoutFeedback>
+//         <View style={styles.modalContent}>
+//           <Text style={styles.modalTitle}>Select Table</Text>
+//           <FlatList
+//             data={tables}
+//             keyExtractor={(item) => item.id.toString()}
+//             renderItem={({ item }) => (
+//               <TouchableOpacity
+//                 style={styles.modalItem}
+//                 onPress={() => {
+//                   setSelectedTable(item);
+//                   setShowTablePicker(false);
+//                 }}
+//               >
+//                 <Text style={styles.modalItemText}>
+//                   {item.name} - {item.status}
+//                 </Text>
+//               </TouchableOpacity>
+//             )}
+//           />
+//         </View>
+//       </Modal>
+
+//       <Modal
+//         visible={showDeliveryBoyPicker}
+//         transparent={true}
+//         animationType="slide"
+//         onRequestClose={() => setShowDeliveryBoyPicker(false)}
+//       >
+//         <TouchableWithoutFeedback
+//           onPress={() => setShowDeliveryBoyPicker(false)}
+//         >
+//           <View style={styles.modalOverlay} />
+//         </TouchableWithoutFeedback>
+//         <View style={styles.modalContent}>
+//           <Text style={styles.modalTitle}>Select Delivery Boy</Text>
+//           <FlatList
+//             data={deliveryBoys}
+//             keyExtractor={(item) => item.id.toString()}
+//             renderItem={({ item }) => (
+//               <TouchableOpacity
+//                 style={styles.modalItem}
+//                 onPress={() => {
+//                   setSelectedDeliveryBoy(item);
+//                   setShowDeliveryBoyPicker(false);
+//                 }}
+//               >
+//                 <Text style={styles.modalItemText}>{item.name}</Text>
+//               </TouchableOpacity>
+//             )}
+//           />
+//         </View>
+//       </Modal>
+
+//       <Modal
+//         visible={showCounterPicker}
+//         transparent={true}
+//         animationType="slide"
+//         onRequestClose={() => setShowCounterPicker(false)}
+//       >
+//         <TouchableWithoutFeedback onPress={() => setShowCounterPicker(false)}>
+//           <View style={styles.modalOverlay} />
+//         </TouchableWithoutFeedback>
+//         <View style={styles.modalContent}>
+//           <Text style={styles.modalTitle}>Select Counter</Text>
+//           <FlatList
+//             data={counters}
+//             keyExtractor={(item) => item.id.toString()}
+//             renderItem={({ item }) => (
+//               <TouchableOpacity
+//                 style={styles.modalItem}
+//                 onPress={() => {
+//                   setSelectedCounter(item);
+//                   setShowCounterPicker(false);
+//                 }}
+//               >
+//                 <Text style={styles.modalItemText}>{item.name}</Text>
+//               </TouchableOpacity>
+//             )}
+//           />
+//         </View>
+//       </Modal>
+
+//       <Modal
+//         visible={showPlatformPicker}
+//         transparent={true}
+//         animationType="slide"
+//         onRequestClose={() => setShowPlatformPicker(false)}
+//       >
+//         <TouchableWithoutFeedback onPress={() => setShowPlatformPicker(false)}>
+//           <View style={styles.modalOverlay} />
+//         </TouchableWithoutFeedback>
+//         <View style={styles.modalContent}>
+//           <Text style={styles.modalTitle}>Select Platform</Text>
+//           <FlatList
+//             data={platforms}
+//             keyExtractor={(item) => item.id.toString()}
+//             renderItem={({ item }) => (
+//               <TouchableOpacity
+//                 style={styles.modalItem}
+//                 onPress={() => {
+//                   setSelectedPlatform(item);
+//                   setShowPlatformPicker(false);
+//                 }}
+//               >
+//                 <Text style={styles.modalItemText}>{item.name}</Text>
+//               </TouchableOpacity>
+//             )}
+//           />
+//         </View>
+//       </Modal>
+
+//       {/* {totalItems > 0 &&  (
+//           <View style={styles.cartIndicator}>
+//             <Ionicons  name="cart" size={24} color="#fff" />
+//             <Text style={styles.cartCount}>{totalItems}</Text>
+//           </View>
+//         )} */}
+
+//       <View style={styles.logoutIconContainer}>
+//         <TouchableOpacity onPress={handleLogout} style={styles.cartIconButton}>
+//           <Ionicons name="log-out" size={28} color="#fff" />
+//         </TouchableOpacity>
+//       </View>
+
+//       <View style={styles.cartIconContainer}>
+//         <TouchableOpacity
+//           onPress={() => navigation.navigate("Orders")}
+//           style={styles.cartIconButton}
+//         >
+//           <Ionicons name="cart" size={28} color="#fff" />
+//           {cartTotalItems > 0 && (
+//             <View style={styles.cartBadge}>
+//               <Text style={styles.cartCount}>{totalItems}</Text>
+//             </View>
+//           )}
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* <View style={styles.header}>
+//       <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+//         <Ionicons name="log-out" size={24} color="#fff" />
+//       </TouchableOpacity>
+//       <Text style={styles.title}>Menu</Text>
+
+//       </View> */}
+//     </SafeAreaView>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#fafafa",
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     backgroundColor: "#fafafa",
+//   },
+//   loadingText: {
+//     marginTop: 16,
+//     color: "#7c3aed",
+//     fontSize: 16,
+//     fontWeight: "500",
+//   },
+//   errorContainer: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     padding: 24,
+//     backgroundColor: "#fafafa",
+//   },
+//   errorText: {
+//     marginTop: 16,
+//     color: "#ef4444",
+//     fontSize: 16,
+//     textAlign: "center",
+//     fontWeight: "500",
+//   },
+//   retryButton: {
+//     marginTop: 24,
+//     backgroundColor: "#7c3aed",
+//     paddingHorizontal: 24,
+//     paddingVertical: 12,
+//     borderRadius: 12,
+//   },
+//   retryButtonText: {
+//     color: "#fff",
+//     fontSize: 16,
+//     fontWeight: "600",
+//   },
+//   content: {
+//     flex: 1,
+//     marginBottom: 90,
+//   },
+
+//   // Header Section
+//   header: {
+//     backgroundColor: "#7c3aed",
+//     paddingTop: 50,
+//     paddingBottom: 24,
+//     paddingHorizontal: 20,
+//     borderBottomLeftRadius: 24,
+//     borderBottomRightRadius: 24,
+//   },
+//   title: {
+//     fontSize: 28,
+//     fontWeight: "700",
+//     color: "#fff",
+//     textAlign: "center",
+//     marginTop: 10,
+//   },
+
+//   // Top Icons
+//   topIcons: {
+//     position: "absolute",
+//     top: 50,
+//     left: 0,
+//     right: 0,
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     paddingHorizontal: 20,
+//     zIndex: 100,
+//   },
+//   iconButton: {
+//     width: 44,
+//     height: 44,
+//     borderRadius: 22,
+//     backgroundColor: "rgba(255,255,255,0.2)",
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   cartBadge: {
+//     position: "absolute",
+//     right: -2,
+//     top: -2,
+//     backgroundColor: "#ef4444",
+//     borderRadius: 10,
+//     minWidth: 20,
+//     height: 20,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   cartCount: {
+//     color: "#fff",
+//     fontSize: 12,
+//     fontWeight: "700",
+//   },
+
+//   // Search Section
+//   searchContainer: {
+//     marginHorizontal: 20,
+//     marginTop: -20,
+//     marginBottom: 24,
+//     flexDirection: "row",
+//     alignItems: "center",
+//     backgroundColor: "#fff",
+//     borderRadius: 16,
+//     paddingHorizontal: 16,
+//     paddingVertical: 14,
+//     shadowColor: "#7c3aed",
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.1,
+//     shadowRadius: 12,
+//     elevation: 6,
+//   },
+//   searchIcon: {
+//     marginRight: 12,
+//   },
+//   searchInput: {
+//     flex: 1,
+//     fontSize: 16,
+//     color: "#374151",
+//     fontWeight: "400",
+//   },
+
+//   // Categories Section
+//   categoryHeader: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     marginHorizontal: 20,
+//     marginBottom: 16,
+//   },
+//   sectionTitle: {
+//     fontSize: 22,
+//     fontWeight: "700",
+//     color: "#1f2937",
+//   },
+//   viewAll: {
+//     color: "#7c3aed",
+//     fontWeight: "600",
+//     fontSize: 15,
+//   },
+//   categoriesContainer: {
+//     paddingHorizontal: 16,
+//     paddingBottom: 20,
+//   },
+//   categoryItem: {
+//     backgroundColor: "#f8fafc",
+//     borderRadius: 25,
+//     paddingVertical: 12,
+//     paddingHorizontal: 20,
+//     marginHorizontal: 6,
+//     borderWidth: 1,
+//     borderColor: "#e5e7eb",
+//   },
+//   selectedCategory: {
+//     backgroundColor: "#7c3aed",
+//     borderColor: "#7c3aed",
+//   },
+//   categoryText: {
+//     fontSize: 14,
+//     fontWeight: "500",
+//     color: "#4b5563",
+//   },
+//   selectedCategoryText: {
+//     color: "#fff",
+//     fontWeight: "600",
+//   },
+
+//   // Menu Items Grid
+//   menuTitle: {
+//     marginHorizontal: 20,
+//     marginBottom: 16,
+//     fontSize: 22,
+//     fontWeight: "700",
+//     color: "#1f2937",
+//   },
+//   gridContainer: {
+//     paddingHorizontal: 16,
+//     paddingBottom: 20,
+//   },
+//   gridItem: {
+//     width: '47%',
+//     backgroundColor: "#fff",
+//     borderRadius: 20,
+//     padding: 20,
+//     margin: '1.5%',
+//     alignItems: "center",
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.06,
+//     shadowRadius: 8,
+//     elevation: 3,
+//     borderWidth: 1,
+//     borderColor: "#f3f4f6",
+//   },
+//   itemImagePlaceholder: {
+//     width: 80,
+//     height: 80,
+//     backgroundColor: "#f8fafc",
+//     borderRadius: 40,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     marginBottom: 16,
+//     borderWidth: 1,
+//     borderColor: "#ede9fe",
+//   },
+//   itemName: {
+//     fontSize: 16,
+//     fontWeight: "600",
+//     textAlign: "center",
+//     marginBottom: 8,
+//     color: "#1f2937",
+//     minHeight: 40,
+//   },
+//   itemPrice: {
+//     fontSize: 18,
+//     fontWeight: "700",
+//     color: "#7c3aed",
+//     marginBottom: 16,
+//   },
+//   addButton: {
+//     backgroundColor: "#7c3aed",
+//     borderRadius: 12,
+//     paddingVertical: 10,
+//     paddingHorizontal: 24,
+//     width: "100%",
+//     alignItems: "center",
+//   },
+//   addButtonText: {
+//     color: "#fff",
+//     fontWeight: "600",
+//     fontSize: 14,
+//   },
+
+//   // Empty State
+//   emptyContainer: {
+//     flex: 1,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     padding: 40,
+//   },
+//   emptyText: {
+//     fontSize: 20,
+//     fontWeight: "600",
+//     color: "#6b7280",
+//     marginTop: 16,
+//   },
+//   emptySubtext: {
+//     fontSize: 16,
+//     color: "#9ca3af",
+//     marginTop: 8,
+//     textAlign: "center",
+//   },
+
+//   // Cart Items
+//   cartItemsContainer: {
+//     backgroundColor: "#fff",
+//     marginHorizontal: 20,
+//     marginBottom: 20,
+//     borderRadius: 16,
+//     padding: 20,
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.06,
+//     shadowRadius: 8,
+//     elevation: 3,
+//   },
+//   cartHeaderRow: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     marginBottom: 16,
+//   },
+//   resetText: {
+//     color: "#ef4444",
+//     fontSize: 14,
+//     fontWeight: "600",
+//   },
+//   cartItemsList: {
+//     paddingTop: 8,
+//   },
+//   cartItem: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     paddingVertical: 12,
+//     borderBottomWidth: 1,
+//     borderBottomColor: "#f3f4f6",
+//   },
+//   cartItemName: {
+//     flex: 1,
+//     fontSize: 15,
+//     color: "#374151",
+//     fontWeight: "500",
+//   },
+//   cartItemControls: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//   },
+//   cartQuantityButton: {
+//     width: 32,
+//     height: 32,
+//     borderRadius: 16,
+//     backgroundColor: "#f3f4f6",
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   cartQuantityText: {
+//     width: 40,
+//     textAlign: "center",
+//     fontSize: 16,
+//     fontWeight: "600",
+//     color: "#1f2937",
+//   },
+//   cartItemPrice: {
+//     width: 80,
+//     textAlign: "right",
+//     fontSize: 15,
+//     fontWeight: "600",
+//     color: "#7c3aed",
+//   },
+
+//   // Order Form
+//   orderFormContainer: {
+//     backgroundColor: "#fff",
+//     marginHorizontal: 20,
+//     borderRadius: 20,
+//     padding: 24,
+//     marginBottom: 24,
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.06,
+//     shadowRadius: 8,
+//     elevation: 3,
+//   },
+//   sectionBox: {
+//     backgroundColor: "#f8fafc",
+//     borderRadius: 16,
+//     padding: 20,
+//     marginBottom: 20,
+//     borderWidth: 1,
+//     borderColor: "#e5e7eb",
+//   },
+//   subSectionTitle: {
+//     fontSize: 16,
+//     fontWeight: "600",
+//     color: "#374151",
+//     marginBottom: 12,
+//   },
+//   orderTypeContainer: {
+//     flexDirection: "row",
+//     flexWrap: "wrap",
+//     justifyContent: "space-between",
+//   },
+//   orderTypeButton: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     marginBottom: 12,
+//     paddingVertical: 8,
+//     width: "48%",
+//   },
+//   radioOuter: {
+//     width: 20,
+//     height: 20,
+//     borderRadius: 10,
+//     borderWidth: 2,
+//     borderColor: "#7c3aed",
+//     marginRight: 12,
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   radioOuterSelected: {
+//     backgroundColor: "#ede9fe",
+//   },
+//   radioInner: {
+//     width: 10,
+//     height: 10,
+//     borderRadius: 5,
+//     backgroundColor: "#7c3aed",
+//   },
+//   orderTypeText: {
+//     fontSize: 15,
+//     color: "#374151",
+//     fontWeight: "500",
+//   },
+//   pickerButton: {
+//     flexDirection: "row",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     backgroundColor: "#fff",
+//     borderRadius: 12,
+//     padding: 16,
+//     marginBottom: 16,
+//     borderWidth: 1,
+//     borderColor: "#e5e7eb",
+//   },
+//   pickerText: {
+//     color: "#374151",
+//     fontSize: 16,
+//     fontWeight: "500",
+//   },
+//   pickerPlaceholder: {
+//     color: "#9ca3af",
+//     fontSize: 16,
+//   },
+//   feeInput: {
+//     backgroundColor: "#fff",
+//     borderRadius: 12,
+//     padding: 16,
+//     borderWidth: 1,
+//     borderColor: "#e5e7eb",
+//     color: "#374151",
+//     fontSize: 16,
+//     marginBottom: 16,
+//   },
+
+//   // Total Section (Fixed at bottom)
+//   totalSection: {
+//     position: "absolute",
+//     bottom: 90,
+//     left: 20,
+//     right: 20,
+//     backgroundColor: "#fff",
+//     borderRadius: 20,
+//     padding: 24,
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: -4 },
+//     shadowOpacity: 0.1,
+//     shadowRadius: 12,
+//     elevation: 8,
+//     borderWidth: 1,
+//     borderColor: "#f3f4f6",
+//   },
+//   totalLabel: {
+//     fontSize: 16,
+//     fontWeight: "500",
+//     color: "#6b7280",
+//     marginBottom: 4,
+//   },
+//   totalAmount: {
+//     fontSize: 28,
+//     fontWeight: "700",
+//     color: "#7c3aed",
+//     marginBottom: 20,
+//   },
+//   actionButtons: {
+//     flexDirection: "row",
+//     gap: 12,
+//   },
+//   kotButton: {
+//     backgroundColor: "#7c3aed",
+//     borderRadius: 16,
+//     padding: 16,
+//     flex: 1,
+//     alignItems: "center",
+//   },
+//   kotButtonText: {
+//     color: "#fff",
+//     fontWeight: "600",
+//     fontSize: 16,
+//   },
+//   billButton: {
+//     backgroundColor: "#f8fafc",
+//     borderRadius: 16,
+//     padding: 16,
+//     flex: 1,
+//     alignItems: "center",
+//     borderWidth: 2,
+//     borderColor: "#7c3aed",
+//   },
+//   billButtonText: {
+//     color: "#7c3aed",
+//     fontWeight: "600",
+//     fontSize: 16,
+//   },
+
+//   // Footer Styles
+//   footer: {
+//     position: "absolute",
+//     bottom: 0,
+//     left: 0,
+//     right: 0,
+//     flexDirection: "row",
+//     justifyContent: "space-around",
+//     alignItems: "center",
+//     backgroundColor: "#fff",
+//     paddingVertical: 16,
+//     paddingBottom: 20,
+//     borderTopWidth: 1,
+//     borderTopColor: "#f3f4f6",
+//     shadowColor: "#000",
+//     shadowOffset: { width: 0, height: -4 },
+//     shadowOpacity: 0.08,
+//     shadowRadius: 12,
+//     elevation: 8,
+//   },
+//   footerButton: {
+//     alignItems: "center",
+//     flex: 1,
+//   },
+//   footerIconContainer: {
+//     width: 48,
+//     height: 48,
+//     borderRadius: 24,
+//     justifyContent: "center",
+//     alignItems: "center",
+//     marginBottom: 4,
+//   },
+//   activeFooterIcon: {
+//     backgroundColor: "#7c3aed",
+//   },
+//   footerButtonText: {
+//     fontSize: 12,
+//     fontWeight: "500",
+//     color: "#6b7280",
+//   },
+//   activeFooterText: {
+//     color: "#7c3aed",
+//     fontWeight: "600",
+//   },
+
+//   // Modal Styles
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: "rgba(0,0,0,0.5)",
+//     justifyContent: "flex-end",
+//   },
+//   modalContent: {
+//     backgroundColor: "#fff",
+//     borderTopLeftRadius: 24,
+//     borderTopRightRadius: 24,
+//     padding: 24,
+//     maxHeight: "80%",
+//   },
+//   modalTitle: {
+//     fontSize: 20,
+//     fontWeight: "700",
+//     marginBottom: 20,
+//     textAlign: "center",
+//     color: "#1f2937",
+//   },
+//   modalItem: {
+//     padding: 16,
+//     borderBottomWidth: 1,
+//     borderBottomColor: "#f3f4f6",
+//     borderRadius: 8,
+//     marginBottom: 4,
+//   },
+//   modalItemText: {
+//     fontSize: 16,
+//     color: "#374151",
+//     fontWeight: "500",
+//   },
+//   addContainer: {
+//     marginBottom: 20,
+//   },
+//   addInput: {
+//     borderWidth: 1,
+//     borderColor: "#e5e7eb",
+//     borderRadius: 12,
+//     padding: 16,
+//     marginBottom: 12,
+//     color: "#374151",
+//     fontSize: 16,
+//   },
+//   phoneInputContainer: {
+//     flexDirection: "row",
+//     gap: 12,
+//   },
+//   emailInput: {
+//     flex: 1,
+//   },
+//   phoneInput: {
+//     flex: 1,
+//   },
+//   addButtonModal: {
+//     backgroundColor: "#7c3aed",
+//     borderRadius: 12,
+//     paddingVertical: 16,
+//     alignItems: "center",
+//   },
+//   disabledAddButton: {
+//     backgroundColor: "#d1d5db",
+//   },
+//   addButtonTextModal: {
+//     color: "#fff",
+//     fontWeight: "600",
+//     fontSize: 16,
+//   },
+//   noAddressText: {
+//     textAlign: "center",
+//     padding: 24,
+//     color: "#6b7280",
+//     fontSize: 16,
+//   },
+// });

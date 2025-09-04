@@ -1,4 +1,460 @@
-import React, { useState, useRef } from 'react';
+// import React, { useState, useRef } from 'react';
+// import {
+//   View,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   Alert,
+//   StyleSheet,
+//   KeyboardAvoidingView,
+//   Platform,
+//   Animated,
+//   Easing,
+//   ActivityIndicator,
+//   Dimensions,
+//   Image,
+//   SafeAreaView
+  
+// } from 'react-native';
+// import { LinearGradient } from 'expo-linear-gradient';
+// import { MaterialIcons, Feather } from '@expo/vector-icons';
+// import { AuthAPI } from '../api/api';
+
+
+// const { width, height } = Dimensions.get('window');
+
+// export default function LoginScreen({ navigation }) {
+//   const [email, setEmail] = useState('');
+//   const [password, setPassword] = useState('');
+//   const [focusedInput, setFocusedInput] = useState(null);
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [showPassword, setShowPassword] = useState(false);
+  
+//   const buttonScale = useRef(new Animated.Value(1)).current;
+//   const formOpacity = useRef(new Animated.Value(0)).current;
+//   const formTranslateY = useRef(new Animated.Value(30)).current;
+//   const logoScale = useRef(new Animated.Value(0.8)).current;
+//   const logoTranslateY = useRef(new Animated.Value(-20)).current;
+
+  
+//   React.useEffect(() => {
+//     Animated.parallel([
+//       Animated.spring(logoScale, {
+//         toValue: 1,
+//         friction: 4,
+//         tension: 30,
+//         useNativeDriver: true,
+//         delay: 100
+//       }),
+//       Animated.spring(logoTranslateY, {
+//         toValue: 0,
+//         friction: 4,
+//         tension: 30,
+//         useNativeDriver: true,
+//         delay: 100
+//       }),
+//       Animated.timing(formOpacity, {
+//         toValue: 1,
+//         duration: 600,
+//         easing: Easing.out(Easing.quad),
+//         useNativeDriver: true,
+//         delay: 300
+//       }),
+//       Animated.timing(formTranslateY, {
+//         toValue: 0,
+//         duration: 600,
+//         easing: Easing.out(Easing.quad),
+//         useNativeDriver: true,
+//         delay: 300
+//       })
+//     ]).start();
+//   }, []);
+// const handleLogin = async () => {
+//   if (!email || !password) {
+//     Alert.alert('Error', 'Please enter both email and password');
+//     return;
+//   }
+
+//   setIsLoading(true);
+  
+//   try {
+  
+//     await new Promise(resolve => {
+//       Animated.sequence([
+//         Animated.timing(buttonScale, {
+//           toValue: 0.95,
+//           duration: 100,
+//           easing: Easing.inOut(Easing.ease),
+//           useNativeDriver: true
+//         }),
+//         Animated.timing(buttonScale, {
+//           toValue: 1,
+//           duration: 200,
+//           easing: Easing.inOut(Easing.ease),
+//           useNativeDriver: true
+//         })
+//       ]).start(resolve);
+//     });
+
+   
+//     const response = await AuthAPI.login(email, password);
+    
+//     if (!response) {
+//       throw new Error('No response received from server');
+//     }
+
+   
+//     const accountInfo = await AuthAPI.getAccountInfo();
+    
+//     if (!accountInfo?.role) {
+//       throw new Error('Unable to determine user role');
+//     }
+
+   
+//     let targetScreen = 'Menu'; 
+    
+//     switch (accountInfo.role.toLowerCase()) {
+//       case 'waiter':
+//         targetScreen = 'Menu';
+//         break;
+//       case 'admin':
+//         targetScreen = 'Menu';
+//         break;
+//       case 'delivery':
+//         targetScreen = 'Delivery';
+//         break;
+//       default:
+//         Alert.alert(
+//           'Access Denied',
+//           'This app is currently only available for waiters and delivery staff'
+//         );
+//         await AuthAPI.logout();
+//         return;
+//     }
+
+//     navigation.replace(targetScreen);
+    
+//   } catch (error) {
+//     console.error('Login error:', error);
+//     let errorMessage = "Login failed. Please try again.";
+    
+//     if (error.response?.data) {
+//       const apiError = error.response.data;
+//       errorMessage = 
+//         apiError.non_field_errors?.[0] ||
+//         apiError.detail ||
+//         apiError.message ||
+//         (typeof apiError === 'string' ? apiError : 'Invalid credentials');
+//     } else if (error.message) {
+//       errorMessage = error.message;
+//     }
+    
+//     Alert.alert('Login Error', errorMessage);
+//     setPassword('');
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };
+
+//   const handleInputFocus = (inputName) => {
+//     setFocusedInput(inputName);
+//   };
+
+//   return (
+// <LinearGradient
+//   colors={['#6e3879ff', '#4e2c58ff', '#651568ff']}
+//   style={styles.container}
+//   start={{ x: 0.5, y: 0 }}
+//   end={{ x: 0.5, y: 1 }}
+// >
+//       <SafeAreaView style={styles.safeArea}>
+//         <KeyboardAvoidingView
+//           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+//           style={styles.keyboardView}
+//         >
+//           <Animated.View style={[
+//             styles.logoContainer,
+//             { 
+//               transform: [
+//                 { scale: logoScale },
+//                 { translateY: logoTranslateY }
+//               ] 
+//             }
+//           ]}>
+//             <LinearGradient
+//               colors={['#f11cf1ff', '#f8f9fa']}
+//               style={styles.logoCircle}
+//               start={{ x: 0.2, y: 0.2 }}
+//               end={{ x: 1, y: 1 }}
+//             >
+//               {/* <Feather name="coffee" size={48} color="#6d4c41" /> */}
+//                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+//     <Image
+//       source={require('../assets/favicon.png')}
+//       style={{ width: 120, height: 120,borderRadius:50, resizeMode: 'contain' }}
+//     />
+//   </View>
+//             </LinearGradient>
+//             <Text style={styles.logoText}>Nasresto</Text>
+//             <Text style={styles.tagline}>Innovation never ends</Text>
+//           </Animated.View>
+
+//           <Animated.View style={[
+//             styles.formContainer,
+//             {
+//               opacity: formOpacity,
+//               transform: [{ translateY: formTranslateY }]
+//             }
+//           ]}>
+//             <Text style={styles.welcomeText}>Welcome Back!</Text>
+//             <Text style={styles.subText}>Sign in to your account</Text>
+
+//             <View style={[
+//               styles.inputContainer,
+//               focusedInput === 'email' && styles.inputFocused
+//             ]}>
+//               {/* <MaterialIcons
+//                 name="email"
+//                 size={24}
+//                 color={focusedInput === 'email' ? '#fdbb2d' : 'rgba(255,255,255,0.7)'}
+//                 style={styles.inputIcon}
+//               /> */}
+//               <TextInput
+//                 placeholder="Email"
+//                 placeholderTextColor="rgba(255,255,255,0.7)"
+//                 value={email}
+//                 onChangeText={setEmail}
+//                 // onFocus={() => handleInputFocus('email')}
+//                 // onBlur={() => setFocusedInput(null)}
+//                 style={styles.input}
+//                 editable={!isLoading}
+//                 autoCapitalize="none"
+//                 keyboardType="email-address"
+//               />
+//             </View>
+
+//             <View style={[
+//               styles.inputContainer,
+//               focusedInput === 'password' && styles.inputFocused
+//             ]}>
+//               {/* <MaterialIcons
+//                 name="lock"
+//                 size={24}
+//                 color={focusedInput === 'password' ? '#fdbb2d' : 'rgba(255,255,255,0.7)'}
+//                 style={styles.inputIcon}
+//               /> */}
+//               <TextInput
+//                 placeholder="Password"
+//                 placeholderTextColor="rgba(255,255,255,0.7)"
+//                 secureTextEntry={!showPassword}
+//                 value={password}
+//                 onChangeText={setPassword}
+//                 // onFocus={() => handleInputFocus('password')}
+//                 // onBlur={() => setFocusedInput(null)}
+//                 style={styles.input}
+//                 editable={!isLoading}
+//               />
+//               <TouchableOpacity 
+//                 onPress={() => setShowPassword(!showPassword)}
+//                 style={styles.eyeIcon}
+//               >
+//                 <Feather
+//                   name={showPassword ? "eye" : "eye-off"}
+//                   size={20}
+//                   color="rgba(255,255,255,0.7)"
+//                 />
+//               </TouchableOpacity>
+//             </View>
+
+//             <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+//               <TouchableOpacity
+//                 onPress={handleLogin}
+//                 style={styles.loginButton}
+//                 activeOpacity={0.9}
+//                 disabled={isLoading}
+//               >
+//                 <LinearGradient
+//                   colors={['#f46b45', '#eea849']}
+//                   style={styles.buttonGradient}
+//                   start={{ x: 0, y: 0 }}
+//                   end={{ x: 1, y: 0 }}
+//                 >
+//                   {isLoading ? (
+//                     <ActivityIndicator color="white" />
+//                   ) : (
+//                     <>
+//                       <Text style={styles.buttonText}>SIGN IN</Text>
+//                       <Feather name="arrow-right" size={24} color="white" />
+//                     </>
+//                   )}
+//                 </LinearGradient>
+//               </TouchableOpacity>
+//             </Animated.View>
+
+//             {/* <TouchableOpacity 
+//               style={styles.forgotButton}
+//               disabled={isLoading}
+//             >
+//               <Text style={styles.forgotText}>Forgot Password?</Text>
+//             </TouchableOpacity>
+//              */}
+            
+//           </Animated.View>
+//         </KeyboardAvoidingView>
+//       </SafeAreaView>
+//     </LinearGradient>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//   },
+//   safeArea: {
+//     flex: 1,
+//   },
+//   keyboardView: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     paddingHorizontal: 30,
+//   },
+//   logoContainer: {
+//     alignItems: 'center',
+//     marginBottom: 40,
+//   },
+//   logoCircle: {
+//     width: 120,
+//     height: 120,
+//     borderRadius: 60,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     marginBottom: 20,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 10 },
+//     shadowOpacity: 0.2,
+//     shadowRadius: 20,
+//     elevation: 10,
+//   },
+//   logoText: {
+//     color: 'white',
+//     fontSize: 32,
+//     fontWeight: '700',
+//     letterSpacing: 1.5,
+//     textShadowColor: 'rgba(0,0,0,0.2)',
+//     textShadowOffset: { width: 1, height: 1 },
+//     textShadowRadius: 5,
+//   },
+//   tagline: {
+//     color: 'rgba(255,255,255,0.8)',
+//     fontSize: 16,
+//     fontWeight: '500',
+//     marginTop: 8,
+//     letterSpacing: 1,
+//   },
+//   formContainer: {
+//     backgroundColor: 'rgba(255,255,255,0.15)',
+//     borderRadius: 25,
+//     padding: 30,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 15 },
+//     shadowOpacity: 0.2,
+//     shadowRadius: 30,
+//     elevation: 15,
+//     borderWidth: 1,
+//     borderColor: 'rgba(255,255,255,0.2)',
+//     backdropFilter: 'blur(10px)',
+//   },
+//   welcomeText: {
+//     fontSize: 26,
+//     fontWeight: '700',
+//     color: 'white',
+//     marginBottom: 5,
+//     textAlign: 'center',
+//   },
+//   subText: {
+//     fontSize: 16,
+//     color: 'rgba(255,255,255,0.8)',
+//     marginBottom: 30,
+//     textAlign: 'center',
+//     fontWeight: '500',
+//   },
+//   inputContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     borderWidth: 1.5,
+//     borderColor: 'rgba(255,255,255,0.3)',
+//     borderRadius: 15,
+//     paddingHorizontal: 20,
+//     marginBottom: 20,
+//     height: 60,
+//   },
+//   inputFocused: {
+//     borderColor: '#fdbb2d',
+//     backgroundColor: 'rgba(253, 187, 45, 0.1)',
+//   },
+//   inputIcon: {
+//     marginRight: 15,
+//   },
+//   eyeIcon: {
+//     padding: 5,
+//   },
+//   input: {
+//     flex: 1,
+//     height: '100%',
+//     fontSize: 16,
+//     color: 'white',
+//     fontWeight: '500',
+//   },
+//   loginButton: {
+//     borderRadius: 15,
+//     overflow: 'hidden',
+//     marginTop: 10,
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 5 },
+//     shadowOpacity: 0.3,
+//     shadowRadius: 10,
+//     elevation: 8,
+//   },
+//   buttonGradient: {
+//     paddingVertical: 18,
+//     paddingHorizontal: 20,
+//     flexDirection: 'row',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   buttonText: {
+//     color: 'white',
+//     fontWeight: '800',
+//     fontSize: 16,
+//     marginRight: 10,
+//     letterSpacing: 1,
+//   },
+//   forgotButton: {
+//     alignSelf: 'center',
+//     marginTop: 20,
+//   },
+//   forgotText: {
+//     color: 'rgba(255,255,255,0.8)',
+//     fontWeight: '600',
+//   },
+//   footer: {
+//     flexDirection: 'row',
+//     justifyContent: 'center',
+//     marginTop: 30,
+//   },
+//   footerText: {
+//     color: 'rgba(255,255,255,0.8)',
+//     fontWeight: '500',
+//   },
+//   footerLink: {
+//     fontWeight: '700',
+//     color: 'white',
+//     textDecorationLine: 'underline',
+//   },
+// });
+
+// new design
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,44 +470,38 @@ import {
   Dimensions,
   Image,
   SafeAreaView
-  
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { AuthAPI } from '../api/api';
 
-
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [focusedInput, setFocusedInput] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const buttonScale = useRef(new Animated.Value(1)).current;
   const formOpacity = useRef(new Animated.Value(0)).current;
   const formTranslateY = useRef(new Animated.Value(30)).current;
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const logoTranslateY = useRef(new Animated.Value(-20)).current;
 
-  
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.parallel([
       Animated.spring(logoScale, {
         toValue: 1,
         friction: 4,
         tension: 30,
-        useNativeDriver: true,
-        delay: 100
+        useNativeDriver: true
       }),
       Animated.spring(logoTranslateY, {
         toValue: 0,
         friction: 4,
         tension: 30,
-        useNativeDriver: true,
-        delay: 100
+        useNativeDriver: true
       }),
       Animated.timing(formOpacity, {
         toValue: 1,
@@ -69,249 +519,169 @@ export default function LoginScreen({ navigation }) {
       })
     ]).start();
   }, []);
-const handleLogin = async () => {
-  if (!email || !password) {
-    Alert.alert('Error', 'Please enter both email and password');
-    return;
-  }
 
-  setIsLoading(true);
-  
-  try {
-  
-    await new Promise(resolve => {
-      Animated.sequence([
-        Animated.timing(buttonScale, {
-          toValue: 0.95,
-          duration: 100,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true
-        }),
-        Animated.timing(buttonScale, {
-          toValue: 1,
-          duration: 200,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true
-        })
-      ]).start(resolve);
-    });
-
-   
-    const response = await AuthAPI.login(email, password);
-    
-    if (!response) {
-      throw new Error('No response received from server');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
     }
 
-   
-    const accountInfo = await AuthAPI.getAccountInfo();
-    
-    if (!accountInfo?.role) {
-      throw new Error('Unable to determine user role');
-    }
+    setIsLoading(true);
+    try {
+      await new Promise(resolve => {
+        Animated.sequence([
+          Animated.timing(buttonScale, {
+            toValue: 0.95,
+            duration: 100,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true
+          }),
+          Animated.timing(buttonScale, {
+            toValue: 1,
+            duration: 200,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true
+          })
+        ]).start(resolve);
+      });
 
-   
-    let targetScreen = 'Menu'; 
-    
-    switch (accountInfo.role.toLowerCase()) {
-      case 'waiter':
-        targetScreen = 'Menu';
-        break;
-      case 'admin':
-        targetScreen = 'Menu';
-        break;
-      case 'delivery':
-        targetScreen = 'Delivery';
-        break;
-      default:
-        Alert.alert(
-          'Access Denied',
-          'This app is currently only available for waiters and delivery staff'
-        );
-        await AuthAPI.logout();
-        return;
-    }
+      const response = await AuthAPI.login(email, password);
+      if (!response) throw new Error('No response from server');
 
-    navigation.replace(targetScreen);
-    
-  } catch (error) {
-    console.error('Login error:', error);
-    let errorMessage = "Login failed. Please try again.";
-    
-    if (error.response?.data) {
-      const apiError = error.response.data;
-      errorMessage = 
-        apiError.non_field_errors?.[0] ||
-        apiError.detail ||
-        apiError.message ||
-        (typeof apiError === 'string' ? apiError : 'Invalid credentials');
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-    
-    Alert.alert('Login Error', errorMessage);
-    setPassword('');
-  } finally {
-    setIsLoading(false);
-  }
-};
+      const accountInfo = await AuthAPI.getAccountInfo();
+      if (!accountInfo?.role) throw new Error('Unable to determine user role');
 
-  const handleInputFocus = (inputName) => {
-    setFocusedInput(inputName);
+      let targetScreen = 'Menu';
+      switch (accountInfo.role.toLowerCase()) {
+        case 'waiter':
+        case 'admin':
+          targetScreen = 'Menu';
+          break;
+        case 'delivery':
+          targetScreen = 'DeliveryDashboard';
+          break;
+        default:
+          Alert.alert('Access Denied', 'Only waiters and delivery staff can use this app');
+          await AuthAPI.logout();
+          return;
+      }
+      navigation.replace(targetScreen);
+    } catch (error) {
+      console.error('Login error:', error);
+      let errorMessage = "Login failed. Please try again.";
+      if (error.response?.data) {
+        const apiError = error.response.data;
+        errorMessage =
+          apiError.non_field_errors?.[0] ||
+          apiError.detail ||
+          apiError.message ||
+          (typeof apiError === 'string' ? apiError : 'Invalid credentials');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      Alert.alert('Login Error', errorMessage);
+      setPassword('');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-<LinearGradient
-  colors={['#6e3879ff', '#4e2c58ff', '#651568ff']}
-  style={styles.container}
-  start={{ x: 0.5, y: 0 }}
-  end={{ x: 0.5, y: 1 }}
->
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
-        >
-          <Animated.View style={[
-            styles.logoContainer,
-            { 
-              transform: [
-                { scale: logoScale },
-                { translateY: logoTranslateY }
-              ] 
-            }
-          ]}>
-            <LinearGradient
-              colors={['#f11cf1ff', '#f8f9fa']}
-              style={styles.logoCircle}
-              start={{ x: 0.2, y: 0.2 }}
-              end={{ x: 1, y: 1 }}
-            >
-              {/* <Feather name="coffee" size={48} color="#6d4c41" /> */}
-               <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-    <Image
-      source={require('../assets/favicon.png')}
-      style={{ width: 120, height: 120,borderRadius:50, resizeMode: 'contain' }}
-    />
-  </View>
-            </LinearGradient>
-            <Text style={styles.logoText}>Nasresto</Text>
-            <Text style={styles.tagline}>Innovation never ends</Text>
-          </Animated.View>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        {/* Logo */}
+        <Animated.View style={[
+          styles.logoContainer,
+          { transform: [{ scale: logoScale }, { translateY: logoTranslateY }] }
+        ]}>
+          <Image
+            source={require('../assets/favicon.png')}
+            style={styles.logo}
+          />
+          <Text style={styles.logoText}>NasResto</Text>
+          <Text style={styles.tagline}>Innovation never ends</Text>
+        </Animated.View>
 
-          <Animated.View style={[
-            styles.formContainer,
-            {
-              opacity: formOpacity,
-              transform: [{ translateY: formTranslateY }]
-            }
-          ]}>
-            <Text style={styles.welcomeText}>Welcome Back!</Text>
-            <Text style={styles.subText}>Sign in to your account</Text>
+        {/* Form */}
+        <Animated.View style={[
+          styles.formContainer,
+          { opacity: formOpacity, transform: [{ translateY: formTranslateY }] }
+        ]}>
+          <Text style={styles.welcomeText}>Welcome Back!</Text>
+          <Text style={styles.subText}>Sign in to your account</Text>
 
-            <View style={[
-              styles.inputContainer,
-              focusedInput === 'email' && styles.inputFocused
-            ]}>
-              {/* <MaterialIcons
-                name="email"
-                size={24}
-                color={focusedInput === 'email' ? '#fdbb2d' : 'rgba(255,255,255,0.7)'}
-                style={styles.inputIcon}
-              /> */}
-              <TextInput
-                placeholder="Email"
-                placeholderTextColor="rgba(255,255,255,0.7)"
-                value={email}
-                onChangeText={setEmail}
-                // onFocus={() => handleInputFocus('email')}
-                // onBlur={() => setFocusedInput(null)}
-                style={styles.input}
-                editable={!isLoading}
-                autoCapitalize="none"
-                keyboardType="email-address"
+          {/* Email */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Email"
+              placeholderTextColor="#999"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              editable={!isLoading}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
+
+          {/* Password */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor="#999"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              style={styles.input}
+              editable={!isLoading}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Feather
+                name={showPassword ? "eye" : "eye-off"}
+                size={20}
+                color="#888"
               />
-            </View>
+            </TouchableOpacity>
+          </View>
 
-            <View style={[
-              styles.inputContainer,
-              focusedInput === 'password' && styles.inputFocused
-            ]}>
-              {/* <MaterialIcons
-                name="lock"
-                size={24}
-                color={focusedInput === 'password' ? '#fdbb2d' : 'rgba(255,255,255,0.7)'}
-                style={styles.inputIcon}
-              /> */}
-              <TextInput
-                placeholder="Password"
-                placeholderTextColor="rgba(255,255,255,0.7)"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                // onFocus={() => handleInputFocus('password')}
-                // onBlur={() => setFocusedInput(null)}
-                style={styles.input}
-                editable={!isLoading}
-              />
-              <TouchableOpacity 
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
-              >
-                <Feather
-                  name={showPassword ? "eye" : "eye-off"}
-                  size={20}
-                  color="rgba(255,255,255,0.7)"
-                />
-              </TouchableOpacity>
-            </View>
-
-            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-              <TouchableOpacity
-                onPress={handleLogin}
-                style={styles.loginButton}
-                activeOpacity={0.9}
-                disabled={isLoading}
-              >
-                <LinearGradient
-                  colors={['#f46b45', '#eea849']}
-                  style={styles.buttonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  {isLoading ? (
-                    <ActivityIndicator color="white" />
-                  ) : (
-                    <>
-                      <Text style={styles.buttonText}>SIGN IN</Text>
-                      <Feather name="arrow-right" size={24} color="white" />
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
-
-            {/* <TouchableOpacity 
-              style={styles.forgotButton}
+          {/* Login Button */}
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <TouchableOpacity
+              onPress={handleLogin}
+              style={styles.loginButton}
+              activeOpacity={0.9}
               disabled={isLoading}
             >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
+              <LinearGradient
+                colors={['#6E3CBC', '#9F5FFF']}
+                style={styles.buttonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Text style={styles.buttonText}>SIGN IN</Text>
+                    <Feather name="arrow-right" size={22} color="white" />
+                  </>
+                )}
+              </LinearGradient>
             </TouchableOpacity>
-             */}
-            
           </Animated.View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </LinearGradient>
+        </Animated.View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   safeArea: {
     flex: 1,
+    backgroundColor: 'white',
   },
   keyboardView: {
     flex: 1,
@@ -320,135 +690,77 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 26,
   },
-  logoCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
+  logo: {
+    width: 90,
+    height: 90,
+    borderRadius: 55,
+    marginBottom: 10,
   },
   logoText: {
-    color: 'white',
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
-    letterSpacing: 1.5,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
+    color: '#6E3CBC',
   },
   tagline: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 16,
-    fontWeight: '500',
-    marginTop: 8,
-    letterSpacing: 1,
+    fontSize: 14,
+    color: '#888',
+    marginTop: 2,
   },
   formContainer: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 25,
-    padding: 30,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 25,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.2,
-    shadowRadius: 30,
-    elevation: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    backdropFilter: 'blur(10px)',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
   },
   welcomeText: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '700',
-    color: 'white',
-    marginBottom: 5,
+    color: '#333',
     textAlign: 'center',
   },
   subText: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 30,
+    fontSize: 14,
+    color: '#666',
     textAlign: 'center',
-    fontWeight: '500',
+    marginBottom: 25,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 15,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    height: 60,
-  },
-  inputFocused: {
-    borderColor: '#fdbb2d',
-    backgroundColor: 'rgba(253, 187, 45, 0.1)',
-  },
-  inputIcon: {
-    marginRight: 15,
-  },
-  eyeIcon: {
-    padding: 5,
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    height: 50,
+    backgroundColor: '#FAFAFA',
   },
   input: {
     flex: 1,
-    height: '100%',
-    fontSize: 16,
-    color: 'white',
-    fontWeight: '500',
+    fontSize: 15,
+    color: '#333',
   },
   loginButton: {
-    borderRadius: 15,
+    borderRadius: 12,
     overflow: 'hidden',
     marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 8,
   },
   buttonGradient: {
-    paddingVertical: 18,
-    paddingHorizontal: 20,
+    paddingVertical: 15,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonText: {
     color: 'white',
-    fontWeight: '800',
-    fontSize: 16,
-    marginRight: 10,
-    letterSpacing: 1,
-  },
-  forgotButton: {
-    alignSelf: 'center',
-    marginTop: 20,
-  },
-  forgotText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 30,
-  },
-  footerText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '500',
-  },
-  footerLink: {
     fontWeight: '700',
-    color: 'white',
-    textDecorationLine: 'underline',
+    fontSize: 15,
+    marginRight: 8,
   },
 });
