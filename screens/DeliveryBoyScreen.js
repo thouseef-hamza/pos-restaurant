@@ -26,7 +26,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { OrderAPI, AuthAPI, UserAPI } from "../api/api";
-
+import { useRoute } from "@react-navigation/native";
 // Main Dashboard Screen
 const DeliveryDashboardScreen = ({ navigation }) => {
   const [isScanning, setIsScanning] = useState(false);
@@ -312,6 +312,8 @@ const DeliveryDashboardScreen = ({ navigation }) => {
 
 // Orders Screen
 const OrdersScreen = ({ navigation }) => {
+    const route = useRoute();
+
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState("assigned");
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -322,12 +324,17 @@ const OrdersScreen = ({ navigation }) => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchDeliveryOrders();
     setRefreshing(false);
   };
+
+ useEffect(() => {
+    if (route.params?.activeTab) {
+      setActiveTab(route.params.activeTab);
+    }
+  }, [route.params?.activeTab]);
 
   useEffect(() => {
     fetchDeliveryOrders();
@@ -673,7 +680,7 @@ const OrdersScreen = ({ navigation }) => {
 };
 
 // QR Scanner Modal Component
-const QRScannerModal = ({ isVisible, onClose, onRefresh }) => {
+const QRScannerModal = ({ isVisible, onClose, onRefresh, }) => {
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
@@ -681,50 +688,57 @@ const QRScannerModal = ({ isVisible, onClose, onRefresh }) => {
   const [scanResult, setScanResult] = useState(null);
   const [showScanResult, setShowScanResult] = useState(false);
   const cameraRef = useRef(null);
+const isScanningRef = useRef(false);
+  const navigation = useNavigation();
 
-  const handleBarCodeScanned = async ({ data }) => {
-    if (!cameraReady) return;
+const handleBarCodeScanned = async ({ data }) => {
+  if (!cameraReady || isScanningRef.current) return;
 
-    setCameraReady(false);
+  isScanningRef.current = true;
+  setCameraReady(false);
 
-    try {
+  try {
+    setScanResult({
+      loading: true,
+      message: "Verifying QR code...",
+    });
+    setShowScanResult(true);
+
+    const response = await OrderAPI.verifyQRCode(data);
+
+    if (response === "Order Picked Successfully") {
       setScanResult({
-        loading: true,
-        message: "Verifying QR code...",
+        success: true,
+        message: response,
       });
-      setShowScanResult(true);
-
-      const response = await OrderAPI.verifyQRCode(data);
-
-      if (response === "Order Picked Successfully") {
-        setScanResult({
-          success: true,
-          message: response,
-        });
-        onRefresh();
-      } else if (response === "Order already picked by you") {
-        setScanResult({
-          success: false,
-          message: response,
-          warning: true,
-        });
-      } else {
-        setScanResult({
-          success: false,
-          message: response || "QR verification failed",
-          error: true,
-        });
-      }
-    } catch (error) {
+      onRefresh();
+    } else if (response === "Order already picked by you") {
       setScanResult({
         success: false,
-        message: error.message || "Failed to verify QR code",
+        message: response,
+        warning: true,
+      });
+    } else {
+      setScanResult({
+        success: false,
+        message: response || "QR verification failed",
         error: true,
       });
-    } finally {
-      setShowScanResult(true);
     }
-  };
+  } catch (error) {
+    setScanResult({
+      success: false,
+      message: error.message || "Failed to verify QR code",
+      error: true,
+    });
+  } finally {
+    setShowScanResult(true);
+    // Reset after a delay to prevent immediate re-scan
+    setTimeout(() => {
+      isScanningRef.current = false;
+    }, 5000);
+  }
+};
 
   const ScanResultPopup = () => (
     <Modal
@@ -765,11 +779,14 @@ const QRScannerModal = ({ isVisible, onClose, onRefresh }) => {
                 scanResult?.error && styles.errorButton,
               ]}
               onPress={() => {
-                setShowScanResult(false);
-                if (scanResult?.success) {
-                  onClose();
-                }
-              }}
+  setShowScanResult(false);
+  onClose();
+  if (scanResult?.success) {
+    navigation.navigate("OrdersScreen", { activeTab: "picked" });
+  }
+}}
+
+  
             >
               <Text style={styles.buttonText}>
                 {scanResult?.success ? "View Order" : "Close"}
@@ -786,23 +803,30 @@ const QRScannerModal = ({ isVisible, onClose, onRefresh }) => {
   if (!permission) {
     return <View />;
   }
+if (!isVisible) return null;
 
-  if (!permission.granted) {
-    return (
-      <View style={[styles.container, styles.paddedContainer]}>
+if (!permission) {
+  return null; // still loading permission state
+}
+
+if (!permission.granted) {
+  return (
+    <Modal visible={isVisible} animationType="slide" transparent>
+      <View style={styles.permissionContainer}>
         <Text style={styles.permissionText}>
-          We need your permission to show the camera
+          We need your permission to use the camera
         </Text>
         <Button onPress={requestPermission} title="Grant Permission" />
         <TouchableOpacity
-          style={[styles.scanButton, styles.bottomButton]}
+          style={styles.closePermissionButton}
           onPress={onClose}
         >
-          <Text style={styles.scanButtonText}>Go Back</Text>
+          <Text style={styles.closePermissionText}>Cancel</Text>
         </TouchableOpacity>
       </View>
-    );
-  }
+    </Modal>
+  );
+}
 
   return (
     <Modal visible={isVisible} transparent={false} animationType="slide">
@@ -1088,6 +1112,8 @@ const PaymentModal = ({
                   <View style={styles.customerInfo}>
                     <Text style={styles.sectionTitle}>Select Customer</Text>
                     <Picker
+                      mode="dropdown"
+  dropdownIconColor="#000"
                       selectedValue={selectedCustomer}
                       style={styles.picker}
                       onValueChange={(itemValue) =>
@@ -2143,9 +2169,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   customerInfo: {
+    padding:4,
     marginVertical: 10,
     paddingVertical: 5,
+     marginTop: 10,
+  borderWidth: 1,
+  borderColor: '#ccc',
+  borderRadius: 5,
+  backgroundColor: '#fff',
   },
+  picker: {
+  height: 50,
+  width: '100%',
+  color: '#000', 
+},
+
   customerName: {
     fontSize: 16,
     fontWeight: "600",
@@ -2170,6 +2208,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  permissionContainer: {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "rgba(0,0,0,0.6)", // dim background
+  padding: 20,
+},
+permissionText: {
+  fontSize: 16,
+  color: "#fff",
+  marginBottom: 20,
+  textAlign: "center",
+},
+closePermissionButton: {
+  marginTop: 20,
+  paddingVertical: 10,
+  paddingHorizontal: 20,
+  backgroundColor: "#7e4bcc",
+  borderRadius: 8,
+},
+closePermissionText: {
+  color: "#fff",
+  fontSize: 16,
+},
+
 });
 
 export { DeliveryDashboardScreen, OrdersScreen };

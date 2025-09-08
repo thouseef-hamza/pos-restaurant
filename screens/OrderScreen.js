@@ -17,9 +17,10 @@ import {
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { OrderAPI } from '../api/api';
+import { OrderAPI,UserAPI } from '../api/api';
 import * as Print from 'expo-print';
 import { WebView } from 'react-native-webview';
+import { Picker } from "@react-native-picker/picker";
 
 const paymentTypes = ['Cash', 'Card', 'Credit'];
 const orderStatus = ['ordered', 'settled', 'cancelled'];
@@ -34,11 +35,21 @@ export default function OrderScreen() {
   const navigation = useNavigation();
   const [activeTab, setActiveTab] = useState('All');
   const [selectedOrders, setSelectedOrders] = useState([]);
+  const [currentPaymentOrder, setCurrentPaymentOrder] = useState(null);
+  console.log(currentPaymentOrder);
+  
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [cashAmount, setCashAmount] = useState('');
   const [selectedPayment, setSelectedPayment] = useState('cash');
+  console.log(selectedPayment,"paymnt method");
+    const [customers, setCustomers] = useState([]);
+  console.log(customers,"customers");
+    const [selectedCustomer, setSelectedCustomer] = useState(null);
+  console.log(selectedCustomer);
+  
   const [scaleValue] = useState(new Animated.Value(1));
   const [orders, setOrders] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -62,43 +73,47 @@ export default function OrderScreen() {
 
       const data = await OrderAPI.getOrders(params);
 
-      const formattedOrders = data.map(order => {
-        let customerName = 'Unknown Customer';
-        let customerPhone = '';
+     const formattedOrders = data.map(order => {
+  let customerName = 'Unknown Customer';
+  let customerPhone = '';
+  let customerId = null;
 
-        if (order.customer) {
-          if (typeof order.customer === 'string') {
-            customerName = order.customer;
-          } else if (order.customer.full_name) {
-            customerName = order.customer.full_name;
-          }
+  if (order.customer) {
+    if (typeof order.customer === 'string') {
+      customerName = order.customer;
+    } else if (order.customer.full_name) {
+      customerName = order.customer.full_name;
+      customerId = order.customer.id;  // ✅ keep id
+    }
 
-          if (order.customer.phone_number) {
-            customerPhone = order.customer.phone_number;
-          }
-        }
+    if (order.customer.phone_number) {
+      customerPhone = order.customer.phone_number;
+    }
+  }
 
-        return {
-          ...order,
-          selected: false,
-          table: order.table?.name || 'No Table',
-          customer: {
-            name: customerName,
-            phone: customerPhone,
-            country: {
-              code: order.country_code || '+974',
-              name: 'Qatar'
-            }
-          },
-          items: order.items.map(item => ({
-            ...item,
-            name: item.menu?.name || 'Unknown Item',
-            price: parseFloat(item.menu?.price || 0),
-            qty: item.quantity || 1
-          })),
-          total: parseFloat(order.total_price || 0)
-        };
-      });
+  return {
+    ...order,
+    selected: false,
+    table: order.table?.name || 'No Table',
+    customer: {
+      id: customerId,              // ✅ include id
+      name: customerName,
+      phone: customerPhone,
+      country: {
+        code: order.country_code || '+974',
+        name: 'Qatar'
+      }
+    },
+    items: order.items.map(item => ({
+      ...item,
+      name: item.menu?.name || 'Unknown Item',
+      price: parseFloat(item.menu?.price || 0),
+      qty: item.quantity || 1
+    })),
+    total: parseFloat(order.total_price || 0)
+  };
+});
+
 
       setOrders(formattedOrders);
       
@@ -123,6 +138,20 @@ export default function OrderScreen() {
   useEffect(() => {
     fetchOrders();
   }, [activeTab]);
+
+    useEffect(() => {
+      if (selectedPayment === "Credit" && !currentPaymentOrder?.customer?.id) {
+        const fetchCustomers = async () => {
+          try {
+            const data = await UserAPI.getCustomers();
+            setCustomers(data || []);
+          } catch (error) {
+            console.error("Failed to fetch customers:", error);
+          }
+        };
+        fetchCustomers();
+      }
+    }, [selectedPayment, currentPaymentOrder]);
 
   useEffect(() => {
     if (route.params?.refresh) {
@@ -259,14 +288,32 @@ export default function OrderScreen() {
   } else {
     paymentAmount = totalSelectedAmount;
   }
+ if (!currentPaymentOrder) return;
+
+    const customerId = currentPaymentOrder?.customer?.id
+      ? currentPaymentOrder.customer.id
+      : selectedCustomer;
 
   try {
-    await Promise.all(selectedOrders.map(id =>
-      OrderAPI.updateOrder(id, {
+    const payload={
         order_status: 'settled',
-        payment_amount: paymentAmount, // Use the calculated paymentAmount here
+        payment_amount: paymentAmount, 
         payment_type: selectedPayment,
-      })
+      
+
+    }
+
+     if (selectedPayment === "Credit") {
+  if (!customerId) {
+    Alert.alert("Select Customer", "Please select a customer before proceeding");
+    return;
+  }
+  payload.customer_id = customerId;
+}
+
+      
+    await Promise.all(selectedOrders.map(id =>
+      OrderAPI.updateOrder(id, payload)
     ));
 
     setOrders(orders.map(order =>
@@ -277,6 +324,8 @@ export default function OrderScreen() {
 
     setSelectedOrders([]);
     setShowPaymentModal(false);
+          setCurrentPaymentOrder(null);
+
     setCashAmount('');
     Alert.alert('Payment Confirmed', 'Order has been settled successfully');
     fetchOrders();
@@ -353,6 +402,11 @@ const printBill = async (orderId) => {
   };
 
   const settleSingleOrder = (orderId) => {
+    const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      setCurrentPaymentOrder(order);                   
+
     setSelectedOrders([orderId]);
     setShowPaymentModal(true);
   };
@@ -701,20 +755,41 @@ const printBill = async (orderId) => {
             ))}
           </View>
 
-          {/* {selectedPayment === 'Cash' && (
-            <View style={styles.cashInputContainer}>
-              <Text style={styles.inputLabel}>Cash Amount</Text>
-              <TextInput
-                placeholder="Enter amount"
-                placeholderTextColor="#aaa"
-                value={cashAmount}
-                onChangeText={setCashAmount}
-                keyboardType="numeric"
-                style={styles.cashInput}
-              />
-            </View>
-          )} */}
-
+        
+ {selectedPayment === "Credit" && (
+              <>
+                {currentPaymentOrder?.customer?.id ? (
+                  <View style={styles.customerInfo}>
+                    <Text style={styles.sectionTitle}>Customer</Text>
+                    <Text style={styles.customerName}>
+                      {currentPaymentOrder.customer.name}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.customerInfo}>
+                    {/* <Text style={styles.sectionTitle}>Select Customer</Text> */}
+                    <Picker
+                      mode="dropdown"
+  dropdownIconColor="#000"
+                      selectedValue={selectedCustomer}
+                      style={styles.picker}
+                      onValueChange={(itemValue) =>
+                        setSelectedCustomer(itemValue)
+                      }
+                    >
+                      <Picker.Item label="-- Select Customer --" value={null} />
+                      {customers.map((cust) => (
+                        <Picker.Item
+                          key={cust.id}
+                          label={`${cust.full_name} (${cust.phone_number})`}
+                          value={cust.id}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                )}
+              </>
+            )}
           <View style={styles.totalContainer}>
             <Text style={styles.totalLabel}>Total Amount</Text>
             <Text style={styles.totalAmount}>QAR {totalSelectedAmount.toFixed(2)}</Text>
@@ -1289,5 +1364,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Poppins-Medium",
     color: "#7e4bcc",
+  },
+   customerInfo: {
+    padding:4,
+    marginVertical: 10,
+    paddingVertical: 5,
+     marginTop: 10,
+  borderWidth: 1,
+  borderColor: '#ccc',
+  borderRadius: 5,
+  backgroundColor: '#fff',
   },
 });
